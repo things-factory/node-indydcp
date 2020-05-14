@@ -1,6 +1,6 @@
 var assert = require('assert')
 import { bin } from '../../src/utils'
-import { IndyDCPClient } from '../../src/dcpclient'
+import { IndyDCPClient } from '../../src/dcp-client'
 
 describe('IndyDCPClient', function () {
   describe('#handle_command()', function () {

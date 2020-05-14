@@ -1,6 +1,5 @@
 import Struct from 'struct'
 import { ErrorCode, err_to_string } from './error-code'
-import { RobotStatus } from './robot-status'
 import { CommandCode } from './command-code'
 import { IIndyDCPClient } from './const'
 
@@ -52,103 +51,81 @@ export const TOOMUCH = 10 * 1024 * 1024
 export const HeaderCommand = Struct() // need to be packed
   .chars('robotName', 20)
   .chars('robotVersion', 12)
-  .chars('stepInfo', 1)
-  .chars('sof', 1)
-  .word32Sle('invokeId')
-  .word32Sle('dataSize')
-  .word32Sle('status')
+  .word8Sbe('stepInfo')
+  .word8Sbe('sof')
+  .word32Sbe('invokeId')
+  .word32Sbe('dataSize')
+  .word32Sbe('status')
   .chars('reserved', 6)
-  .word32Sle('cmdId')
+  .word32Sbe('cmdId')
 
-// export const Data = Struct() // union
-//   .chars('byte', SIZE_DATA_TCP_MAX)
-//   .chars('asciiStr', SIZE_DATA_ASCII_MAX + 1)
-//   .chars('str', 200)
-//   .chars('charVal')
-//   .chars('boolVal')
-//   .word16Sle('shortVal')
-//   .word32Sle('intVal')
-//   .floatle('floatVal')
-//   .double64('doubleVal')
-//   .chars('byteVal')
-//   .chars('wordVal', 2)
-//   .chars('uwordVal', 2)
-//   .chars('dwordVal', 4)
-//   .chars('lwordVal', 8)
-//   .chars('bool6dArr', 6)
-//   .chars('bool7dArr', 7)
-//   .chars('boolArr', 200)
-//   .chars('char2dArr', 2)
-//   .chars('char3dArr', 3)
-//   .chars('char6dArr', 6)
-//   .chars('char7dArr', 7)
-//   .chars('charArr', 200)
-//   .word32Sle('int2dArr', 2)
-//   .word32Sle('int3dArr', 3)
-//   .word32Sle('int6dArr', 6)
-//   .word32Sle('int7dArr', 7)
-//   .word32Sle('intArr', 50)
-//   .floatle('float3dArr', 3)
-//   .floatle('float6dArr', 6)
-//   .floatle('float7dArr', 7)
-//   .floatle('floatArr', 50)
-//   .doublele('double3dArr', 3)
-//   .doublele('double6dArr', 6)
-//   .doublele('double7dArr', 7)
-//   .doublele('doubleArr', 50)
-//   .chars('byteArr', 200)
-//   .chars('wordArr', 2 * 100)
-//   .chars('uwordArr', 2 * 100)
-//   .chars('dwordArr', 4 * 50)
-//   .chars('lwordArr', 8 * 25)
+export const ExtHeader = Struct() // need to be packed
+  .word32Sbe('dataSize')
+  .word32Sbe('cmdId')
 
-// export const Packet = Struct() // header + body
-//   .struct('header', HeaderCommand)
-//   .struct('body', Data)
-
-// export const DIO = Struct() // DIO struct
-//   .word32Sle('channel')
-//   .chars('value', 1)
+export const DIO = Struct() // DIO struct
+  .word32Sle('channel')
+  .chars('value', 1)
 
 /* packets */
 export function parsePacketHeader(buffer) {
-  HeaderCommand._setBuff(buffer.slice(0, SIZE_HEADER))
+  HeaderCommand._setBuff(buffer)
   return HeaderCommand.fields
 }
 
-export function buildReqPacket(cmd: number, req_data?: any, req_data_size?: number): { header: any; buffer: Buffer } {
-  var header = HeaderCommand.allocate().fields
+export function parseExtHeader(buffer) {
+  ExtHeader._setBuff(buffer)
+  return ExtHeader.fields
+}
 
-  header.robotName = this.robot_name
-  header.robot_version = this.robot_version
-  header.stepInfo = this.__step_ver
-  header.sof = this.__sof_client
+export function buildReqPacket(
+  client: IIndyDCPClient,
+  cmd: number,
+  req_data?: any,
+  req_data_size?: number
+): { header: any; buffer: Buffer } {
+  var header = HeaderCommand.allocate().fields
+  var buffer = HeaderCommand.buffer()
+
+  req_data_size = req_data_size || req_data?.length || 0
+
+  header.robotName = client.robotName
+  header.robotVersion = client.robotVersion
+  header.stepInfo = client.stepInfo
+  header.sof = client.sofClient
   header.cmdId = cmd
   header.dataSize = req_data_size
 
-  header.invokeId = ++this.v_invokeId
+  header.invokeId = ++client.invokeId
 
   if (req_data_size > 0) {
-    var headerBuffer = header.buffer()
     return {
       header,
-      buffer: Buffer.concat([headerBuffer, req_data], headerBuffer.length + req_data_size)
+      buffer: Buffer.concat([buffer, req_data], buffer.length + req_data_size)
     }
   }
 
   return {
     header,
-    buffer: header.buffer()
+    buffer
   }
 }
 
-export function buildExtReqPacket(ext_cmd: number, req_ext_data: any, req_ext_data_size: number = 0): any {
-  var dataBuffer = Buffer.alloc(8)
+export function buildExtReqPacket(
+  client: IIndyDCPClient,
+  ext_cmd: number,
+  req_ext_data?: any,
+  req_ext_data_size?: number
+): any {
+  var ext = ExtHeader.allocate().fields
+  var extBuffer = ExtHeader.buffer()
 
-  dataBuffer.writeInt32BE(ext_cmd)
-  dataBuffer.writeInt32BE(req_ext_data_size || 0)
+  req_ext_data_size = req_ext_data_size || req_ext_data?.length || 0
 
-  var { header, buffer: packetBuffer } = buildReqPacket(CommandCode.CMD_FOR_EXTENDED, dataBuffer, 8)
+  ext.cmdId = ext_cmd
+  ext.dataSize = req_ext_data_size
+
+  var { header, buffer: packetBuffer } = buildReqPacket(client, CommandCode.CMD_FOR_EXTENDED, extBuffer)
 
   if (req_ext_data_size > 0) {
     return {
@@ -159,14 +136,24 @@ export function buildExtReqPacket(ext_cmd: number, req_ext_data: any, req_ext_da
 
   return {
     header,
+    ext,
     buffer: packetBuffer
   }
 }
 
-export function buildResPacket(buffer) {
+export function parseResPacket(buffer) {
+  var header = parsePacketHeader(buffer)
+  var data = buffer.slice(SIZE_HEADER_COMMAND)
+
+  if (header.cmdId == CommandCode.CMD_FOR_EXTENDED) {
+    var ext = parseExtHeader(data.slice(0, 8))
+    var data = data.slice(8)
+  }
+
   return {
-    header: parsePacketHeader(buffer),
-    data: buffer.slice(SIZE_HEADER)
+    header,
+    ext,
+    data
   }
 }
 

@@ -21,11 +21,13 @@ export interface IIndyDCPClient {
   lock
   sock_fd
   time_out
-  v_invokeId
+  invokeId
   serverIp
   robotName
   robotVersion
-  robot_status
+  robotStatus
+  stepInfo
+  sofClient
 
   connect()
   disconnect()
@@ -33,7 +35,7 @@ export interface IIndyDCPClient {
   set_timeout_sec(time_out)
   _send_message(buf, size)
   _recv_message(buf, size)
-  get_robot_status()
+  get_robotStatus()
   handle_command(cmd, req_data, req_data_size): { error_code; res_data; res_data_size }
   handle_extended_command(ext_cmd, req_ext_data, req_ext_data_size): { error_code; res_data; res_data_size }
   /* Robot command function (Check all) */

@@ -10,6 +10,7 @@ import {
   SIZE_DATA_TCP_MAX,
   TOOMUCH,
   parsePacketHeader,
+  parseExtHeader,
   buildReqPacket,
   buildExtReqPacket,
   check_header
@@ -22,29 +23,29 @@ export class IndyDCPClient implements IIndyDCPClient {
   public lock
   public sock_fd
   public time_out
-  public v_invokeId
+  public invokeId
   public serverIp
   public robotName
   public robotVersion
-  public robot_status
+  public robotStatus
+  public sofServer
+  public sofClient
+  public stepInfo
 
   private __server_port
-  private __sof_server
-  private __sof_client
-  private __step_ver
   private __lock
 
   constructor(serverIp, robotName, robotVersion = '') {
     this.__server_port = 6066
-    this.__sof_server = 0x12
-    this.__sof_client = 0x34
-    this.__step_ver = 0x02
+    this.sofServer = 0x12
+    this.sofClient = 0x34
+    this.stepInfo = 0x02
     this.__lock = new AwaitLock()
 
     this.lock = this.__lock
     this.sock_fd = new Socket()
     this.time_out = 10
-    this.v_invokeId = 0
+    this.invokeId = 0
     this.serverIp = serverIp
     this.robotName = robotName
     this.robotVersion = robotVersion
@@ -125,9 +126,9 @@ export class IndyDCPClient implements IIndyDCPClient {
     //     return buf
   }
 
-  get_robot_status() {
+  get_robotStatus() {
     this.check()
-    return this.robot_status
+    return this.robotStatus
   }
 
   @socket_connect
@@ -148,7 +149,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
 
     var error_code = check_header(reqHeader, resHeader, res_data.readInt32BE())
-    this.robot_status = RobotStatus.from(resHeader.status)
+    this.robotStatus = RobotStatus.from(resHeader.status)
 
     return {
       error_code,
@@ -175,8 +176,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
 
     // Recv extended data from socket
-    var resExtDataSize = res_data.readInt32BE()
-    var resExtCmd = res_data.readInt32BE()
+    var { dataSize: resExtDataSize, cmdId: resExtCmd } = parseExtHeader(res_data)
 
     if (resExtDataSize < 0 || resExtDataSize > TOOMUCH) {
       this.disconnect()
@@ -189,7 +189,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
 
     var error_code = check_header(reqHeader, resHeader, res_data.readInt32BE())
-    this.robot_status = RobotStatus.from(resHeader.status)
+    this.robotStatus = RobotStatus.from(resHeader.status)
 
     return {
       error_code,

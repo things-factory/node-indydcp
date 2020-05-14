@@ -60,7 +60,7 @@ export const tcp_command_req = (cmd, data_type, data_size) => (
   const method = descriptor.value
 
   descriptor.value = function (...args) {
-    var req_data = new Data()
+    var req_data = null // TODO implement
     var req_data_size = data_size
     var arg0 = args[0]
     var tmp_val
@@ -90,7 +90,7 @@ export const tcp_command_req_rec = (cmd, data_type_req, data_size, data_type_rec
   const method = descriptor.value
 
   descriptor.value = function (...args) {
-    var req_data = new Data()
+    var req_data = null // TODO implement
     var req_data_size = data_size
     var args0 = args[0]
     var tmp_val
