@@ -78,6 +78,22 @@ export function parseExtHeader(buffer) {
   return ExtHeader.fields
 }
 
+export function parseResPacket(buffer) {
+  var header = parsePacketHeader(buffer)
+  var data = buffer.slice(SIZE_HEADER_COMMAND)
+
+  if (header.cmdId == CommandCode.CMD_FOR_EXTENDED) {
+    var ext = parseExtHeader(data.slice(0, 8))
+    var data = data.slice(8)
+  }
+
+  return {
+    header,
+    ext,
+    data
+  }
+}
+
 export function buildReqPacket(
   client: IIndyDCPClient,
   cmd: number,
@@ -138,22 +154,6 @@ export function buildExtReqPacket(
     header,
     ext,
     buffer: packetBuffer
-  }
-}
-
-export function parseResPacket(buffer) {
-  var header = parsePacketHeader(buffer)
-  var data = buffer.slice(SIZE_HEADER_COMMAND)
-
-  if (header.cmdId == CommandCode.CMD_FOR_EXTENDED) {
-    var ext = parseExtHeader(data.slice(0, 8))
-    var data = data.slice(8)
-  }
-
-  return {
-    header,
-    ext,
-    data
   }
 }
 
