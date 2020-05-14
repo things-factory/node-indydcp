@@ -19,8 +19,8 @@ export enum DirectVariableType {
 export interface IIndyDCPClient {
   JOINT_DOF
   lock
-  sock_fd
-  time_out
+  sockFd
+  timeout
   invokeId
   serverIp
   robotName
@@ -32,12 +32,12 @@ export interface IIndyDCPClient {
   connect()
   disconnect()
   shutdown()
-  set_timeout_sec(time_out)
+  setTimeoutSec(timeout)
   _send_message(buf, size)
   _recv_message(buf, size)
-  get_robotStatus()
-  handle_command(cmd, req_data, req_data_size): { error_code; res_data; res_data_size }
-  handle_extended_command(ext_cmd, req_ext_data, req_ext_data_size): { error_code; res_data; res_data_size }
+  getRobotStatus()
+  handleCommand(command, reqData, reqDataSize): { errorCode; resData; resDataSize }
+  handleExtendedCommand(extCommand, reqExtData, reqExtDataSize): { errorCode; resData; resDataSize }
   /* Robot command function (Check all) */
   check()
   emergency_stop()
@@ -45,7 +45,7 @@ export interface IIndyDCPClient {
   set_servo(arr)
   set_brake(arr)
   stop_motion()
-  execute_move(cmd_name)
+  execute_move(command_name)
   // Move commands
   go_home()
   go_zero()
@@ -148,10 +148,10 @@ export interface IIndyDCPClient {
   get_robot_ft_sensor_process()
   get_cb_ft_sensor_raw()
   get_cb_ft_sensor_process()
-  read_direct_variable(dv_type, dv_addr)
-  read_direct_variables(dv_type, dv_addr, dv_len)
-  write_direct_variable(dv_type, dv_addr, val)
-  write_direct_variables(dv_type, dv_addr, dv_len, val)
+  read_direct_variable(dvType, dvAddr)
+  read_direct_variables(dvType, dvAddr, dvLen)
+  write_direct_variable(dvType, dvAddr, val)
+  write_direct_variables(dvType, dvAddr, dvLen, val)
   // Not released
 
   set_reduced_mode(mode)
@@ -160,19 +160,19 @@ export interface IIndyDCPClient {
   get_reduced_speed_ratio()
   /* Extended IndyDCP command (Check all) */
 
-  move_ext_traj_bin(traj_type, traj_freq, dat_size, traj_data, dat_num)
-  move_ext_traj_txt(traj_type, traj_freq, dat_size, traj_data, dat_num)
-  move_ext_traj_bin_file(file_name)
-  move_ext_traj_txt_file(file_name)
+  move_ext_traj_bin(trajType, trajFreq, datSize, trajData, datNum)
+  move_ext_traj_txt(trajType, trajFreq, datSize, trajData, datNum)
+  move_ext_traj_bin_file(filename)
+  move_ext_traj_txt_file(filename)
   joint_move_to_wp_set()
   task_move_to_wp_set()
   /* JSON programming added (only for internal engineer) */
   set_json_program()
-  set_and_start_json_program(json_string)
+  set_and_start_json_program(jsonString)
   wait_for_program_finish()
-  set_workspace(cmd_pos)
+  set_workspace(commandPos)
   /* Teaching points */
-  load_teaching_data(file_name)
-  update_teaching_data(file_name, wp_name, j_pos)
-  del_teaching_data(file_name, wp_name)
+  load_teaching_data(filename)
+  update_teaching_data(filename, wpName, j_pos)
+  del_teaching_data(filename, wpName)
 }

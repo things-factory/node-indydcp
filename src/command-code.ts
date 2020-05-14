@@ -1,4 +1,4 @@
-/* Command */
+/* Command Codes */
 export enum CommandCode {
   CMD_CHECK = 0,
   CMD_EMERGENCY_STOP = 1,

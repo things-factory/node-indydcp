@@ -58,6 +58,6 @@ export const ERROR_STRING = {
   [ErrorCode.ERR_DIRECT_VARIABLE_REFNUM_LIMIT]: 'Limit of direct variable size'
 }
 
-export function err_to_string(err_cmd) {
-  return ERROR_STRING[err_cmd] || 'None'
+export function getErrorString(errorCode) {
+  return ERROR_STRING[errorCode] || 'None'
 }

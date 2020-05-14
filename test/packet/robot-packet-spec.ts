@@ -47,7 +47,7 @@ describe('Packet', function () {
       expect(header.stepInfo).to.be.equal(0x02)
       expect(header.sof).to.be.equal(0x34)
       expect(header.invokeId).to.be.equal(1)
-      expect(header.cmdId).to.be.equal(CommandCode.CMD_CHECK)
+      expect(header.command).to.be.equal(CommandCode.CMD_CHECK)
 
       /* parse as a response */
       var { header: resHeader, data: resData } = parseResPacket(buffer)
@@ -58,7 +58,7 @@ describe('Packet', function () {
       expect(resHeader.stepInfo).to.be.equal(0x02)
       expect(resHeader.sof).to.be.equal(0x34)
       expect(resHeader.invokeId).to.be.equal(1)
-      expect(resHeader.cmdId).to.be.equal(CommandCode.CMD_CHECK)
+      expect(resHeader.command).to.be.equal(CommandCode.CMD_CHECK)
     })
 
     it('헤더정보에 클라이언트의 정보를 반영해야한다.', async function () {
@@ -87,7 +87,7 @@ describe('Packet', function () {
       expect(header.stepInfo).to.be.equal(0x02)
       expect(header.sof).to.be.equal(0x34)
       expect(header.invokeId).to.be.equal(1)
-      expect(header.cmdId).to.be.equal(CommandCode.CMD_SET_BRAKE)
+      expect(header.command).to.be.equal(CommandCode.CMD_SET_BRAKE)
 
       /* parse as a response */
       var { header: resHeader, data: resData } = parseResPacket(buffer)
@@ -97,7 +97,7 @@ describe('Packet', function () {
       expect(resHeader.stepInfo).to.be.equal(0x02)
       expect(resHeader.sof).to.be.equal(0x34)
       expect(resHeader.invokeId).to.be.equal(1)
-      expect(resHeader.cmdId).to.be.equal(CommandCode.CMD_SET_BRAKE)
+      expect(resHeader.command).to.be.equal(CommandCode.CMD_SET_BRAKE)
 
       expect(resData.readInt8(0)).to.be.equal(1)
       expect(resData.readInt8(1)).to.be.equal(0)
@@ -136,9 +136,9 @@ describe('Packet', function () {
       expect(resHeader.stepInfo).to.be.equal(0x02)
       expect(resHeader.sof).to.be.equal(0x34)
       expect(resHeader.invokeId).to.be.equal(1)
-      expect(resHeader.cmdId).to.be.equal(CommandCode.CMD_FOR_EXTENDED)
+      expect(resHeader.command).to.be.equal(CommandCode.CMD_FOR_EXTENDED)
 
-      expect(extHeader.cmdId).to.be.equal(CommandCode.EXT_CMD_MOVE_TRAJ_BY_DATA)
+      expect(extHeader.command).to.be.equal(CommandCode.EXT_CMD_MOVE_TRAJ_BY_DATA)
       expect(extHeader.dataSize).to.be.equal(8)
 
       expect(resData.length).to.be.equal(8)

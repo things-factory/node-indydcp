@@ -13,7 +13,7 @@ import {
   parseExtHeader,
   buildReqPacket,
   buildExtReqPacket,
-  check_header
+  checkHeader
 } from './packet'
 import { socket_connect, tcp_command, tcp_command_rec, tcp_command_req, tcp_command_req_rec } from './decorators'
 
@@ -21,8 +21,8 @@ import { socket_connect, tcp_command, tcp_command_rec, tcp_command_req, tcp_comm
 export class IndyDCPClient implements IIndyDCPClient {
   public JOINT_DOF
   public lock
-  public sock_fd
-  public time_out
+  public sockFd
+  public timeout
   public invokeId
   public serverIp
   public robotName
@@ -43,8 +43,8 @@ export class IndyDCPClient implements IIndyDCPClient {
     this.__lock = new AwaitLock()
 
     this.lock = this.__lock
-    this.sock_fd = new Socket()
-    this.time_out = 10
+    this.sockFd = new Socket()
+    this.timeout = 10
     this.invokeId = 0
     this.serverIp = serverIp
     this.robotName = robotName
@@ -55,44 +55,44 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   async connect() {
     // await this.__lock.acquireAsync()
-    this.sock_fd = new Socket(Socket.AF_INET, Socket.SOCK_STREAM)
+    this.sockFd = new Socket(Socket.AF_INET, Socket.SOCK_STREAM)
     try {
-      this.sock_fd.connect((this.serverIp, this.__server_port))
+      this.sockFd.connect((this.serverIp, this.__server_port))
 
       console.log(`Connect: Server IP (${this.serverIp})`)
       return true
     } catch (e) {
       console.error(e)
-      this.sock_fd.close()
+      this.sockFd.close()
       // this.__lock.release()
       return false
     }
   }
 
   disconnect() {
-    this.sock_fd.close()
+    this.sockFd.close()
     // this.__lock.release()
   }
 
   shutdown() {
-    this.sock_fd.shutdown(Socket.SHUT_RDWR)
+    this.sockFd.shutdown(Socket.SHUT_RDWR)
     console.log('Shut down')
   }
 
-  set_timeout_sec(time_out) {
-    if (time_out < 0) {
-      console.log(`Invalid time out setting: ${time_out} < 0`)
+  setTimeoutSec(timeout) {
+    if (timeout < 0) {
+      console.log(`Invalid time out setting: ${timeout} < 0`)
     }
 
-    this.time_out = time_out
+    this.timeout = timeout
   }
 
   _send_message(buf, size?) {
     //     dump_buf("SendBytes: ", buf, size)
     //     total_sent = 0
     //     while total_sent < size:
-    //         this.sock_fd.settimeout(this.time_out)
-    //         sent = this.sock_fd.send(buf[total_sent:size])
+    //         this.sockFd.settimeout(this.timeout)
+    //         sent = this.sockFd.send(buf[total_sent:size])
     //         if sent == -1:
     //             console.log('Error: sent == -1')
     //             return -1
@@ -108,8 +108,8 @@ export class IndyDCPClient implements IIndyDCPClient {
     //     chunks = []
     //     bytes_recd = 0
     //     while bytes_recd < size:
-    //         this.sock_fd.settimeout(this.time_out)
-    //         chunk = this.sock_fd.recv(size - bytes_recd)
+    //         this.sockFd.settimeout(this.timeout)
+    //         chunk = this.sockFd.recv(size - bytes_recd)
     //         if chunk == b'':
     //             console.log('Error: receive error')
     //             memset (buf, 0, sizeof (buf))
@@ -126,83 +126,83 @@ export class IndyDCPClient implements IIndyDCPClient {
     //     return buf
   }
 
-  get_robotStatus() {
+  getRobotStatus() {
     this.check()
     return this.robotStatus
   }
 
   @socket_connect
-  handle_command(cmd, reqBuffer?, reqBufferSize?): { error_code; res_data; res_data_size } {
-    var { header: reqHeader, buffer } = buildReqPacket(cmd, reqBuffer, reqBufferSize)
+  handleCommand(command, reqBuffer?, reqBufferSize?): { errorCode; resData; resDataSize } {
+    var { header: reqHeader, buffer } = buildReqPacket(command, reqBuffer, reqBufferSize)
     this._send_message(buffer)
 
     // Recv header from socket
     var resHeader = parsePacketHeader(this._recv_message(Buffer.alloc(SIZE_HEADER_COMMAND)))
 
     // Recv data from socket
-    var res_data_size = resHeader.dataSize
-    if (res_data_size > SIZE_DATA_TCP_MAX || res_data_size < 0) {
-      console.log(`Response data size is invalid ${res_data_size} (max: {}): Disconnected`)
+    var resDataSize = resHeader.dataSize
+    if (resDataSize > SIZE_DATA_TCP_MAX || resDataSize < 0) {
+      console.log(`Response data size is invalid ${resDataSize} (max: {}): Disconnected`)
       this.disconnect()
     } else {
-      var res_data = this._recv_message(Buffer.alloc(res_data_size))
+      var resData = this._recv_message(Buffer.alloc(resDataSize))
     }
 
-    var error_code = check_header(reqHeader, resHeader, res_data.readInt32BE())
+    var errorCode = checkHeader(reqHeader, resHeader, resData.readInt32BE())
     this.robotStatus = RobotStatus.from(resHeader.status)
 
     return {
-      error_code,
-      res_data,
-      res_data_size
+      errorCode,
+      resData,
+      resDataSize
     }
   }
 
   @socket_connect
-  handle_extended_command(ext_cmd, req_ext_data?, req_ext_data_size?): { error_code; res_data; res_data_size } {
-    var { header: reqHeader, buffer } = buildExtReqPacket(ext_cmd, req_ext_data, req_ext_data_size)
+  handleExtendedCommand(extCommand, reqExtData?, reqExtDataSize?): { errorCode; resData; resDataSize } {
+    var { header: reqHeader, buffer } = buildExtReqPacket(extCommand, reqExtData, reqExtDataSize)
     this._send_message(buffer)
 
     // Recv header from socket
     var resHeader = parsePacketHeader(this._recv_message(Buffer.alloc(SIZE_HEADER_COMMAND)))
 
     // Recv data from socket
-    var res_data_size = resHeader.dataSize
-    if (res_data_size > SIZE_DATA_TCP_MAX || res_data_size < 0) {
-      console.log(`Response data size is invalid ${res_data_size} (max: {}): Disconnected`)
+    var resDataSize = resHeader.dataSize
+    if (resDataSize > SIZE_DATA_TCP_MAX || resDataSize < 0) {
+      console.log(`Response data size is invalid ${resDataSize} (max: {}): Disconnected`)
       this.disconnect()
     } else {
-      var res_data = this._recv_message(Buffer.alloc(res_data_size))
+      var resData = this._recv_message(Buffer.alloc(resDataSize))
     }
 
     // Recv extended data from socket
-    var { dataSize: resExtDataSize, cmdId: resExtCmd } = parseExtHeader(res_data)
+    var { dataSize: resExtDataSize, command: resExtCmd } = parseExtHeader(resData)
 
     if (resExtDataSize < 0 || resExtDataSize > TOOMUCH) {
       this.disconnect()
       console.log('Recv data error: size')
-    } else if (resExtCmd !== ext_cmd) {
+    } else if (resExtCmd !== extCommand) {
       this.disconnect()
-      console.log(`Recv data error: ext_cmd ${resExtCmd}/${ext_cmd}`)
+      console.log(`Recv data error: extCommand ${resExtCmd}/${extCommand}`)
     } else if (resExtDataSize > 0) {
       var resExtData = this._recv_message(Buffer.alloc(resExtDataSize))
     }
 
-    var error_code = check_header(reqHeader, resHeader, res_data.readInt32BE())
+    var errorCode = checkHeader(reqHeader, resHeader, resData.readInt32BE())
     this.robotStatus = RobotStatus.from(resHeader.status)
 
     return {
-      error_code,
-      res_data,
-      res_data_size
+      errorCode,
+      resData,
+      resDataSize
     }
   }
 
   /* Robot command function (Check all) */
   check() {
     // Get robot status
-    var { error_code, res_data, res_data_size } = this.handle_command(CommandCode.CMD_CHECK)
-    if (!error_code) {
+    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_CHECK)
+    if (!errorCode) {
       // TODO
     }
   }
@@ -213,20 +213,20 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_RESET_ROBOT)
   reset_robot() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_SERVO, 'bool6dArr', this.JOINT_DOF * 1)
+  @tcp_command_req(CommandCode.CMD_SET_SERVO, 'bool', this.JOINT_DOF * 1)
   set_servo(arr) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_BRAKE, 'bool6dArr', this.JOINT_DOF * 1)
+  @tcp_command_req(CommandCode.CMD_SET_BRAKE, 'bool', this.JOINT_DOF * 1)
   set_brake(arr) {}
 
   @tcp_command(CommandCode.CMD_STOP)
   stop_motion() {}
 
-  execute_move(cmd_name) {
-    var req_data = cmd_name
-    var req_data_size = cmd_name.length
+  execute_move(command_name) {
+    var reqData = command_name
+    var reqDataSize = command_name.length
 
-    return this.handle_command(CommandCode.CMD_MOVE, req_data, req_data_size)
+    return this.handleCommand(CommandCode.CMD_MOVE, reqData, reqDataSize)
   }
 
   // Move commands
@@ -236,10 +236,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_MOVE_ZERO)
   go_zero() {}
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_TO, 'double7dArr', this.JOINT_DOF * 8)
+  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_TO, 'double', 7 * 8)
   _7dof_joint_move_to(q) {}
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_TO, 'double6dArr', this.JOINT_DOF * 8)
+  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_TO, 'double', 6 * 8)
   _6dof_joint_move_to(q) {}
 
   joint_move_to(q) {
@@ -250,10 +250,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_BY, 'double7dArr', this.JOINT_DOF * 8)
+  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_BY, 'double', 7 * 8)
   _7dof_joint_move_by(q) {}
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_BY, 'double6dArr', this.JOINT_DOF * 8)
+  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_BY, 'double', 6 * 8)
   _6dof_joint_move_by(q) {}
 
   joint_move_by(q) {
@@ -264,10 +264,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  @tcp_command_req(CommandCode.CMD_TASK_MOVE_TO, 'double6dArr', 6 * 8)
+  @tcp_command_req(CommandCode.CMD_TASK_MOVE_TO, 'double', 6 * 8)
   task_move_to(p) {}
 
-  @tcp_command_req(CommandCode.CMD_TASK_MOVE_BY, 'double6dArr', 6 * 8)
+  @tcp_command_req(CommandCode.CMD_TASK_MOVE_BY, 'double', 6 * 8)
   task_move_by(p) {}
 
   // Program control
@@ -286,56 +286,56 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_START_DEFAULT_PROGRAM)
   start_default_program() {}
 
-  @tcp_command_req(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'intVal', 4)
+  @tcp_command_req(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'int', 4)
   set_default_program(idx) {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_REGISTERED_DEFAULT_PROGRAM_IDX, 'intVal')
+  @tcp_command_rec(CommandCode.CMD_GET_REGISTERED_DEFAULT_PROGRAM_IDX, 'int')
   get_default_program_idx() {}
 
   // Get robot status
-  @tcp_command_rec(CommandCode.CMD_IS_ROBOT_RUNNING, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_ROBOT_RUNNING, 'bool')
   is_robot_running() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_READY, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_READY, 'bool')
   is_robot_ready() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_EMG, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_EMG, 'bool')
   is_emergency_stop() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_COLLIDED, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_COLLIDED, 'bool')
   is_collided() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_ERR, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_ERR, 'bool')
   is_error_state() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_BUSY, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_BUSY, 'bool')
   is_busy() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_MOVE_FINISEHD, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_MOVE_FINISEHD, 'bool')
   is_move_finished() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_HOME, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_HOME, 'bool')
   is_home() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_ZERO, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_ZERO, 'bool')
   is_zero() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_IN_RESETTING, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_IN_RESETTING, 'bool')
   is_in_resetting() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_DIRECT_TECAHING, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_DIRECT_TECAHING, 'bool')
   is_direct_teaching_mode() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_TEACHING, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_TEACHING, 'bool')
   is_teaching_mode() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_PROGRAM_RUNNING, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_PROGRAM_RUNNING, 'bool')
   is_program_running() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_PROGRAM_PAUSED, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_PROGRAM_PAUSED, 'bool')
   is_program_paused() {}
 
-  @tcp_command_rec(CommandCode.CMD_IS_CONTY_CONNECTED, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_IS_CONTY_CONNECTED, 'bool')
   is_conty_connected() {}
 
   // Direct teaching
@@ -347,7 +347,7 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   // Simple waypoint program, joint and task.
   // TODO JOINT_DOF 를 접근할 수 없는데...
-  @tcp_command_req(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'double6dArr', this.JOINT_DOF * 8)
+  @tcp_command_req(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'double', 6 * 8)
   push_back_joint_waypoint(q) {}
 
   @tcp_command(CommandCode.CMD_JOINT_POP_BACK_WAYPOINT_SET)
@@ -359,7 +359,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_JOINT_EXECUTE_WAYPOINT_SET)
   execute_joint_waypoints() {}
 
-  @tcp_command_req(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'double6dArr', 6 * 8)
+  @tcp_command_req(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'double', 6 * 8)
   push_back_task_waypoint(p) {}
 
   @tcp_command(CommandCode.CMD_TASK_POP_BACK_WAYPOINT_SET)
@@ -372,269 +372,269 @@ export class IndyDCPClient implements IIndyDCPClient {
   execute_task_waypoints() {}
 
   // Get/Set some global robot variables
-  @tcp_command_req(CommandCode.CMD_SET_DEFAULT_TCP, 'double6dArr', 6 * 8)
+  @tcp_command_req(CommandCode.CMD_SET_DEFAULT_TCP, 'double', 6 * 8)
   set_default_tcp(tcp) {}
 
   @tcp_command(CommandCode.CMD_RESET_DEFAULT_TCP)
   reset_default_tcp() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_COMP_TCP, 'double6dArr', 6 * 8)
+  @tcp_command_req(CommandCode.CMD_SET_COMP_TCP, 'double', 6 * 8)
   set_tcp_compensation(tcp) {}
 
   @tcp_command(CommandCode.CMD_RESET_COMP_TCP)
   reset_tcp_compensation() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_REFFRAME, 'double6dArr', 6 * 8)
+  @tcp_command_req(CommandCode.CMD_SET_REFFRAME, 'double', 6 * 8)
   set_ref_frame(ref) {}
 
   @tcp_command(CommandCode.CMD_RESET_REFFRAME)
   reset_ref_frame() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_COLLISION_LEVEL, 'intVal', 4)
+  @tcp_command_req(CommandCode.CMD_SET_COLLISION_LEVEL, 'int', 4)
   set_collision_level(level) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_JOINT_BOUNDARY, 'intVal', 4)
+  @tcp_command_req(CommandCode.CMD_SET_JOINT_BOUNDARY, 'int', 4)
   set_joint_speed_level(level) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_BOUNDARY, 'intVal', 4)
+  @tcp_command_req(CommandCode.CMD_SET_TASK_BOUNDARY, 'int', 4)
   set_task_speed_level(level) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_JOINT_WTIME, 'doubleVal', 8)
+  @tcp_command_req(CommandCode.CMD_SET_JOINT_WTIME, 'double', 8)
   set_joint_waypoint_time(time) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_WTIME, 'doubleVal', 8)
+  @tcp_command_req(CommandCode.CMD_SET_TASK_WTIME, 'double', 8)
   set_task_waypoint_time(time) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_CMODE, 'intVal', 4)
+  @tcp_command_req(CommandCode.CMD_SET_TASK_CMODE, 'int', 4)
   set_task_base_mode(mode) {
     // 0: reference body, 1: end-effector tool tip
   }
 
-  @tcp_command_req(CommandCode.CMD_SET_JOINT_BLEND_RADIUS, 'doubleVal', 8)
+  @tcp_command_req(CommandCode.CMD_SET_JOINT_BLEND_RADIUS, 'double', 8)
   set_joint_blend_radius(radius) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_BLEND_RADIUS, 'doubleVal', 8)
+  @tcp_command_req(CommandCode.CMD_SET_TASK_BLEND_RADIUS, 'double', 8)
   set_task_blend_radius(radius) {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_DEFAULT_TCP, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_DEFAULT_TCP, 'double')
   get_default_tcp() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_COMP_TCP, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_COMP_TCP, 'double')
   get_tcp_compensation() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_REFFRAME, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_REFFRAME, 'double')
   get_ref_frame() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_COLLISION_LEVEL, 'intVal')
+  @tcp_command_rec(CommandCode.CMD_GET_COLLISION_LEVEL, 'int')
   get_collision_level() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_JOINT_BOUNDARY, 'intVal')
+  @tcp_command_rec(CommandCode.CMD_GET_JOINT_BOUNDARY, 'int')
   get_joint_speed_level() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_TASK_BOUNDARY, 'intVal')
+  @tcp_command_rec(CommandCode.CMD_GET_TASK_BOUNDARY, 'int')
   get_task_speed_level() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_JOINT_WTIME, 'doubleVal')
+  @tcp_command_rec(CommandCode.CMD_GET_JOINT_WTIME, 'double')
   get_joint_waypoint_time() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_TASK_WTIME, 'doubleVal')
+  @tcp_command_rec(CommandCode.CMD_GET_TASK_WTIME, 'double')
   get_task_waypoint_time() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_TASK_CMODE, 'intVal')
+  @tcp_command_rec(CommandCode.CMD_GET_TASK_CMODE, 'int')
   get_task_base_mode() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_JOINT_BLEND_RADIUS, 'doubleVal')
+  @tcp_command_rec(CommandCode.CMD_GET_JOINT_BLEND_RADIUS, 'double')
   get_joint_blend_radius() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_TASK_BLEND_RADIUS, 'doubleVal')
+  @tcp_command_rec(CommandCode.CMD_GET_TASK_BLEND_RADIUS, 'double')
   get_task_blend_radius() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_RUNNING_TIME, 'doubleVal')
+  @tcp_command_rec(CommandCode.CMD_GET_RUNNING_TIME, 'double')
   get_robot_running_time() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_CMODE, 'intVal')
+  @tcp_command_rec(CommandCode.CMD_GET_CMODE, 'int')
   get_cmode() {}
 
   get_servo_state() {
-    var { error_code, res_data, res_data_size } = this.handle_command(CommandCode.CMD_GET_JOINT_STATE)
-    if (!error_code) {
-      // result = np.array(res_data.charArr)
+    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_GET_JOINT_STATE)
+    if (!errorCode) {
+      // result = np.array(resData.char)
       // servo_state = result[0:JOINT_DOF].tolist()
       // brake_state = result[JOINT_DOF:2*JOINT_DOF].tolist()
       // return servo_state, brake_state
     }
   }
 
-  @tcp_command_rec(CommandCode.CMD_GET_JOINT_POSITION, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_JOINT_POSITION, 'double')
   get_joint_pos() {
     if (this.JOINT_DOF == 7) {
       return 'double7dArr'
     } else {
-      return 'double6dArr'
+      return 'double'
     }
   }
 
-  @tcp_command_rec(CommandCode.CMD_GET_JOINT_VELOCITY, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_JOINT_VELOCITY, 'double')
   get_joint_vel() {
     if (this.JOINT_DOF == 7) {
       return 'double7dArr'
     } else {
-      return 'double6dArr'
+      return 'double'
     }
   }
 
-  @tcp_command_rec(CommandCode.CMD_GET_TASK_POSITION, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_TASK_POSITION, 'double')
   get_task_pos() {
-    return 'double6dArr'
+    return 'double'
   }
 
-  @tcp_command_rec(CommandCode.CMD_GET_TASK_VELOCITY, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_TASK_VELOCITY, 'double')
   get_task_vel() {
-    return 'double6dArr'
+    return 'double'
   }
 
-  @tcp_command_rec(CommandCode.CMD_GET_TORQUE, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_TORQUE, 'double')
   get_torque() {
-    return 'double6dArr'
+    return 'double'
   }
 
   get_last_emergency_info() {
     // Check (TODO: represent meaning of results)
-    var { error_code, res_data, res_data_size } = this.handle_command(CommandCode.CMD_GET_LAST_EMG_INFO)
-    if (!error_code) {
+    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_GET_LAST_EMG_INFO)
+    if (!errorCode) {
       // ret_code = c_int32()
       // ret_int_arr = (c_int32 * 3)()
       // ret_double_arr = (c_double*3)()
-      // memmove(addressof(ret_code), addressof(res_data.byte), 4)
-      // memmove(addressof(ret_int_arr), addressof(res_data.byte) + 4, 4 * 3)
-      // memmove(addressof(ret_double_arr), addressof(res_data.byte) + 16, 8 * 3)
+      // memmove(addressof(ret_code), addressof(resData.byte), 4)
+      // memmove(addressof(ret_int_arr), addressof(resData.byte) + 4, 4 * 3)
+      // memmove(addressof(ret_double_arr), addressof(resData.byte) + 16, 8 * 3)
       // return np.array(ret_code).tolist(), np.array(ret_int_arr).tolist(), np.array(ret_double_arr).tolist()
     }
   }
 
   // I/O
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_DI, 'intVal', 4, 'charVal')
+  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_DI, 'int', 4, 'char')
   get_smart_di(idx) {}
 
   get_smart_dis() {
-    var { error_code, res_data, res_data_size } = this.handle_command(CommandCode.CMD_GET_SMART_DIS)
-    if (error_code) {
-      return error_code
+    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_GET_SMART_DIS)
+    if (errorCode) {
+      return errorCode
     } else {
-      // return np.array(res_data.charArr).tolist()[0:32]
+      // return np.array(resData.char).tolist()[0:32]
     }
   }
 
   set_smart_do(idx, val) {
-    var req_data_size = 5
-    var req_data = Buffer.alloc(req_data_size)
+    var reqDataSize = 5
+    var reqData = Buffer.alloc(reqDataSize)
 
-    req_data.writeInt32BE(4 * idx)
-    req_data.writeInt8(val)
-    //     memmove(req_data.byte, pointer(c_int32(idx)), sizeof(c_int32))
-    //     memmove(addressof(req_data.byte)+4, pointer(c_ubyte(val)), sizeof(c_ubyte))
-    this.handle_command(CommandCode.CMD_SET_SMART_DO, req_data, req_data_size)
+    reqData.writeInt32BE(4 * idx)
+    reqData.writeInt8(val)
+    //     memmove(reqData.byte, pointer(c_int32(idx)), sizeof(c_int32))
+    //     memmove(addressof(reqData.byte)+4, pointer(c_ubyte(val)), sizeof(c_ubyte))
+    this.handleCommand(CommandCode.CMD_SET_SMART_DO, reqData, reqDataSize)
   }
 
-  @tcp_command_req(CommandCode.CMD_SET_SMART_DOS, 'charArr', 32)
+  @tcp_command_req(CommandCode.CMD_SET_SMART_DOS, 'char', 32)
   set_smart_dos(idx) {}
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_AI, 'intVal', 4, 'intVal')
+  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_AI, 'int', 4, 'int')
   get_smart_ai(idx) {}
 
   set_smart_ao(idx, val) {
-    var req_data_size = 8
-    var req_data = Buffer.alloc(req_data_size)
+    var reqDataSize = 8
+    var reqData = Buffer.alloc(reqDataSize)
 
-    req_data.writeInt32BE(idx)
-    req_data.writeInt32BE(val)
+    reqData.writeInt32BE(idx)
+    reqData.writeInt32BE(val)
 
-    this.handle_command(CommandCode.CMD_SET_SMART_AO, req_data, req_data_size)
+    this.handleCommand(CommandCode.CMD_SET_SMART_AO, reqData, reqDataSize)
   }
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_DO, 'intVal', 4, 'charVal')
+  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_DO, 'int', 4, 'char')
   get_smart_do(idx) {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_SMART_DOS, 'charArr')
+  @tcp_command_rec(CommandCode.CMD_GET_SMART_DOS, 'char')
   get_smart_dos() {}
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_AO, 'intVal', 4, 'intVal')
+  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_AO, 'int', 4, 'int')
   get_smart_ao(idx) {}
 
   set_endtool_do(endtool_type, val) {
     // endtool_type:
     // 0: NPN, 1: PNP, 2: Not use, 3: eModi
-    var req_data_size = 5
-    var req_data = Buffer.alloc(req_data_size)
+    var reqDataSize = 5
+    var reqData = Buffer.alloc(reqDataSize)
 
-    req_data.writeInt32BE(endtool_type)
-    req_data.writeInt8(val)
+    reqData.writeInt32BE(endtool_type)
+    reqData.writeInt8(val)
 
-    return this.handle_command(CommandCode.CMD_SET_ENDTOOL_DO, req_data, req_data_size)
+    return this.handleCommand(CommandCode.CMD_SET_ENDTOOL_DO, reqData, reqDataSize)
   }
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_ENDTOOL_DO, 'intVal', 4, 'charVal')
+  @tcp_command_req_rec(CommandCode.CMD_GET_ENDTOOL_DO, 'int', 4, 'char')
   get_endtool_do(type) {}
 
   // FT sensor implementation
-  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_RAW, 'int6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_RAW, 'int')
   get_robot_ft_sensor_raw() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_TRANS, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_TRANS, 'double')
   get_robot_ft_sensor_process() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_CB_RAW, 'int6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_CB_RAW, 'int')
   get_cb_ft_sensor_raw() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_CB_TRANS, 'double6dArr')
+  @tcp_command_rec(CommandCode.CMD_GET_EXTIO_FTCAN_CB_TRANS, 'double')
   get_cb_ft_sensor_process() {}
 
-  read_direct_variable(dv_type, dv_addr) {
-    var req_data_size = 8
-    var req_data = Buffer.alloc(req_data_size)
+  read_direct_variable(dvType, dvAddr) {
+    var reqDataSize = 8
+    var reqData = Buffer.alloc(reqDataSize)
 
-    req_data.writeInt32BE(dv_type)
-    req_data.writeInt32BE(dv_addr)
+    reqData.writeInt32BE(dvType)
+    reqData.writeInt32BE(dvAddr)
 
-    var { error_code, res_data, res_data_size } = this.handle_command(
+    var { errorCode, resData, resDataSize } = this.handleCommand(
       CommandCode.CMD_READ_DIRECT_VARIABLE,
-      req_data,
-      req_data_size
+      reqData,
+      reqDataSize
     )
 
-    if (error_code) {
-      return error_code
+    if (errorCode) {
+      return errorCode
     }
 
-    switch (dv_type) {
+    switch (dvType) {
       case DirectVariableType.BYTE: // B
-      // if res_data_size == 1:
-      //     return np.array(res_data.byteVal)
+      // if resDataSize == 1:
+      //     return np.array(resData.byteVal)
       case DirectVariableType.WORD: // W
-      // if res_data_size == 2:
-      //     val = np.array(res_data.wordVal).tolist()
+      // if resDataSize == 2:
+      //     val = np.array(resData.wordVal).tolist()
       //     console.log(val)
       //     res = int.from_bytes(val, byteorder='little', signed=true)
       //     return res
       case DirectVariableType.DWORD: // I
-      // if res_data_size == 4:
-      //     val = np.array(res_data.dwordVal).tolist()
+      // if resDataSize == 4:
+      //     val = np.array(resData.dwordVal).tolist()
       //     res = int.from_bytes(val, byteorder='little', signed=true)
       //     return res
       case DirectVariableType.LWORD: // L
-      // if res_data_size == 8:
-      //     val = np.array(res_data.lwordVal).tolist()
+      // if resDataSize == 8:
+      //     val = np.array(resData.lwordVal).tolist()
       //     res = int.from_bytes(val, byteorder='little', signed=true)
       //     return res
       case DirectVariableType.FLOAT: // F
-      // if res_data_size == 4:
-      //     return np.array(res_data.floatVal)
+      // if resDataSize == 4:
+      //     return np.array(resData.floatVal)
       case DirectVariableType.DFLOAT: // D
-      // if res_data_size == 8:
-      //     return np.array(res_data.doubleVal)
+      // if resDataSize == 8:
+      //     return np.array(resData.double)
       case DirectVariableType.MODBUS_REG: // M
-      // if res_data_size == 2:
-      //     val = np.array(res_data.uwordVal).tolist()
+      // if resDataSize == 2:
+      //     val = np.array(resData.uwordVal).tolist()
       //     res = int.from_bytes(val, byteorder='little', signed=false)
       //     return res
       default:
@@ -643,74 +643,74 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  read_direct_variables(dv_type, dv_addr, dv_len) {
-    if (dv_len > 20) {
-      console.log(`Length should be less than 20, but ${dv_len}`)
+  read_direct_variables(dvType, dvAddr, dvLen) {
+    if (dvLen > 20) {
+      console.log(`Length should be less than 20, but ${dvLen}`)
       return
     }
 
-    var req_data_size = 12
-    var req_data = Buffer.alloc(req_data_size)
+    var reqDataSize = 12
+    var reqData = Buffer.alloc(reqDataSize)
 
-    req_data.writeInt32BE(dv_type)
-    req_data.writeInt32BE(dv_addr)
-    req_data.writeInt32BE(dv_len)
+    reqData.writeInt32BE(dvType)
+    reqData.writeInt32BE(dvAddr)
+    reqData.writeInt32BE(dvLen)
 
-    var { error_code, res_data, res_data_size } = this.handle_command(
+    var { errorCode, resData, resDataSize } = this.handleCommand(
       CommandCode.CMD_READ_DIRECT_VARIABLES,
-      req_data,
-      req_data_size
+      reqData,
+      reqDataSize
     )
 
-    if (error_code) {
-      return error_code
+    if (errorCode) {
+      return errorCode
     }
 
-    switch (dv_type) {
+    switch (dvType) {
       case DirectVariableType.BYTE: // B
-      // if res_data_size == 1*dv_len:
+      // if resDataSize == 1*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         res.append(np.array(res_data.byteArr)[dv_n])
+      //     for dv_n in range(0, dvLen):
+      //         res.append(np.array(resData.byteArr)[dv_n])
       //     return res
       case DirectVariableType.WORD: // W
-      // if res_data_size == 2*dv_len:
+      // if resDataSize == 2*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         val = np.array(res_data.wordArr)[dv_n].tolist()
+      //     for dv_n in range(0, dvLen):
+      //         val = np.array(resData.wordArr)[dv_n].tolist()
       //         res.append(int.from_bytes(val, byteorder='little', signed=true))
       //     return res
       case DirectVariableType.DWORD: // I
-      // if res_data_size == 4*dv_len:
+      // if resDataSize == 4*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         val = np.array(res_data.dwordArr)[dv_n].tolist()
+      //     for dv_n in range(0, dvLen):
+      //         val = np.array(resData.dwordArr)[dv_n].tolist()
       //         res.append(int.from_bytes(val, byteorder='little', signed=true))
       //     return res
       case DirectVariableType.LWORD: // L
-      // if res_data_size == 8*dv_len:
+      // if resDataSize == 8*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         val = np.array(res_data.lwordArr)[dv_n].tolist()
+      //     for dv_n in range(0, dvLen):
+      //         val = np.array(resData.lwordArr)[dv_n].tolist()
       //         res.append(int.from_bytes(val, byteorder='little', signed=true))
       //     return res
       case DirectVariableType.FLOAT: // F
-      // if res_data_size == 4*dv_len:
+      // if resDataSize == 4*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         res.append(np.array(res_data.floatArr)[dv_n])
+      //     for dv_n in range(0, dvLen):
+      //         res.append(np.array(resData.floatArr)[dv_n])
       //     return res
       case DirectVariableType.DFLOAT: // D
-      // if res_data_size == 8*dv_len:
+      // if resDataSize == 8*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         res.append(np.array(res_data.doubleArr)[dv_n])
+      //     for dv_n in range(0, dvLen):
+      //         res.append(np.array(resData.doubleArr)[dv_n])
       //     return res
       case DirectVariableType.MODBUS_REG: // M
-      // if res_data_size == 2*dv_len:
+      // if resDataSize == 2*dvLen:
       //     res = []
-      //     for dv_n in range(0, dv_len):
-      //         val = np.array(res_data.uwordArr)[dv_n].tolist()
+      //     for dv_n in range(0, dvLen):
+      //         val = np.array(resData.uwordArr)[dv_n].tolist()
       //         res.append(int.from_bytes(val, byteorder='little', signed=false))
       //     return res
       default:
@@ -719,156 +719,156 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  write_direct_variable(dv_type, dv_addr, val) {
-    var req_data_size = 8
+  write_direct_variable(dvType, dvAddr, val) {
+    var reqDataSize = 8
 
-    var req_data = Buffer.alloc(req_data_size)
-    req_data.writeInt32BE(dv_type)
-    req_data.writeInt32BE(dv_addr)
+    var reqData = Buffer.alloc(reqDataSize)
+    reqData.writeInt32BE(dvType)
+    reqData.writeInt32BE(dvAddr)
 
-    switch (dv_type) {
+    switch (dvType) {
       case DirectVariableType.BYTE:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_uint8(val)), 1)
-      // req_data_size += 1
-      // console.log(np.array(req_data.byte))
-      // console.log(req_data_size)
+      // memmove(addressof(reqData.byte) + 8, pointer(c_uint8(val)), 1)
+      // reqDataSize += 1
+      // console.log(np.array(reqData.byte))
+      // console.log(reqDataSize)
       case DirectVariableType.WORD:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_int16(val)), 2)
-      // req_data_size += 2
-      // console.log(np.array(req_data.byte))
-      // console.log(req_data_size)
+      // memmove(addressof(reqData.byte) + 8, pointer(c_int16(val)), 2)
+      // reqDataSize += 2
+      // console.log(np.array(reqData.byte))
+      // console.log(reqDataSize)
       case DirectVariableType.DWORD:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_int32(val)), 4)
-      // req_data_size += 4
+      // memmove(addressof(reqData.byte) + 8, pointer(c_int32(val)), 4)
+      // reqDataSize += 4
       case DirectVariableType.LWORD:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_int64(val)), 8)
-      // req_data_size += 8
+      // memmove(addressof(reqData.byte) + 8, pointer(c_int64(val)), 8)
+      // reqDataSize += 8
       case DirectVariableType.FLOAT:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_float(val)), 4)
-      // req_data_size += 4
+      // memmove(addressof(reqData.byte) + 8, pointer(c_float(val)), 4)
+      // reqDataSize += 4
       case DirectVariableType.DFLOAT:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_double(val)), 8)
-      // req_data_size += 8
+      // memmove(addressof(reqData.byte) + 8, pointer(c_double(val)), 8)
+      // reqDataSize += 8
       case DirectVariableType.MODBUS_REG:
-      // memmove(addressof(req_data.byte) + 8, pointer(c_uint16(val)), 2)
-      // req_data_size += 2
+      // memmove(addressof(reqData.byte) + 8, pointer(c_uint16(val)), 2)
+      // reqDataSize += 2
       default:
         console.log('None matched type')
     }
 
-    this.handle_command(CommandCode.CMD_WRITE_DIRECT_VARIABLE, req_data, req_data_size)
+    this.handleCommand(CommandCode.CMD_WRITE_DIRECT_VARIABLE, reqData, reqDataSize)
   }
 
-  write_direct_variables(dv_type, dv_addr, dv_len, val) {
-    var req_data_size = 12
-    var req_data = Buffer.alloc(req_data_size)
+  write_direct_variables(dvType, dvAddr, dvLen, val) {
+    var reqDataSize = 12
+    var reqData = Buffer.alloc(reqDataSize)
 
-    req_data.writeInt32BE(dv_type)
-    req_data.writeInt32BE(dv_addr)
-    req_data.writeInt32BE(dv_len)
+    reqData.writeInt32BE(dvType)
+    reqData.writeInt32BE(dvAddr)
+    reqData.writeInt32BE(dvLen)
 
-    switch (dv_type) {
+    switch (dvType) {
       case DirectVariableType.BYTE:
-      // for ii in range(0, dv_len):
-      //     memmove(addressof(req_data.byte) + 12 + 1*ii, pointer(c_uint8(val[ii])), 1)
-      //     req_data_size += 1
+      // for ii in range(0, dvLen):
+      //     memmove(addressof(reqData.byte) + 12 + 1*ii, pointer(c_uint8(val[ii])), 1)
+      //     reqDataSize += 1
       case DirectVariableType.WORD:
-      // for ii in range(0, dv_len):
+      // for ii in range(0, dvLen):
       //     type_size = 2
-      //     memmove(addressof(req_data.byte) + 12 + type_size*ii, pointer(c_int16(val[ii])), type_size)
-      //     req_data_size += type_size
+      //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_int16(val[ii])), type_size)
+      //     reqDataSize += type_size
       case DirectVariableType.DWORD:
-      // for ii in range(0, dv_len):
+      // for ii in range(0, dvLen):
       //     type_size = 4
-      //     memmove(addressof(req_data.byte) + 12 + type_size*ii, pointer(c_int32(val[ii])), type_size)
-      //     req_data_size += type_size
+      //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_int32(val[ii])), type_size)
+      //     reqDataSize += type_size
       case DirectVariableType.LWORD:
-      // for ii in range(0, dv_len):
+      // for ii in range(0, dvLen):
       //     type_size = 8
-      //     memmove(addressof(req_data.byte) + 12 + type_size*ii, pointer(c_int64(val[ii])), type_size)
-      //     req_data_size += type_size
+      //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_int64(val[ii])), type_size)
+      //     reqDataSize += type_size
       case DirectVariableType.FLOAT:
-      // for ii in range(0, dv_len):
+      // for ii in range(0, dvLen):
       //     type_size = 4
-      //     memmove(addressof(req_data.byte) + 12 + type_size*ii, pointer(c_float(val[ii])), type_size)
-      //     req_data_size += type_size
+      //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_float(val[ii])), type_size)
+      //     reqDataSize += type_size
       case DirectVariableType.DFLOAT:
-      // for ii in range(0, dv_len):
+      // for ii in range(0, dvLen):
       //     type_size = 8
-      //     memmove(addressof(req_data.byte) + 12 + type_size*ii, pointer(c_double(val[ii])), type_size)
-      //     req_data_size += type_size
+      //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_double(val[ii])), type_size)
+      //     reqDataSize += type_size
       case DirectVariableType.MODBUS_REG:
-      // for ii in range(0, dv_len):
+      // for ii in range(0, dvLen):
       //     type_size = 2
-      //     memmove(addressof(req_data.byte) + 12 + type_size*ii, pointer(c_uint16(val[ii])), type_size)
-      //     req_data_size += type_size
+      //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_uint16(val[ii])), type_size)
+      //     reqDataSize += type_size
       default:
         console.log('None matched type')
     }
 
-    this.handle_command(CommandCode.CMD_WRITE_DIRECT_VARIABLES, req_data, req_data_size)
+    this.handleCommand(CommandCode.CMD_WRITE_DIRECT_VARIABLES, reqData, reqDataSize)
   }
 
   // Not released
-  @tcp_command_req(CommandCode.CMD_SET_REDUCED_MODE, 'boolVal', 1)
+  @tcp_command_req(CommandCode.CMD_SET_REDUCED_MODE, 'bool', 1)
   set_reduced_mode(mode) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_REDUCED_SPEED_RATIO, 'doubleVal', 8)
+  @tcp_command_req(CommandCode.CMD_SET_REDUCED_SPEED_RATIO, 'double', 8)
   set_reduced_speed_ratio(ratio) {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_REDUCED_MODE, 'boolVal')
+  @tcp_command_rec(CommandCode.CMD_GET_REDUCED_MODE, 'bool')
   get_reduced_mode() {}
 
-  @tcp_command_rec(CommandCode.CMD_GET_REDUCED_SPEED_RATIO, 'doubleVal')
+  @tcp_command_rec(CommandCode.CMD_GET_REDUCED_SPEED_RATIO, 'double')
   get_reduced_speed_ratio() {}
 
   /* Extended IndyDCP command (Check all) */
 
-  move_ext_traj_bin(traj_type, traj_freq, dat_size, traj_data, dat_num = 3) {
-    var dat_len = traj_data.length
-    var opt_data = [traj_type, traj_freq, dat_num, dat_size, Math.floor(dat_len / (dat_size * dat_num))]
+  move_ext_traj_bin(trajType, trajFreq, datSize, trajData, datNum = 3) {
+    var dat_len = trajData.length
+    var opt_data = [trajType, trajFreq, datNum, datSize, Math.floor(dat_len / (datSize * datNum))]
     //     ext_data1 = np.array(opt_data).tobytes()
-    //     ext_data2 = np.array(traj_data).tobytes()
-    //     req_ext_data = ext_data1 + ext_data2
-    //     req_ext_data_size = len(req_ext_data)
-    // this._handle_extended_command(EXT_CommandCode.CMD_MOVE_TRAJ_BY_DATA, req_ext_data, req_ext_data_size)
+    //     ext_data2 = np.array(trajData).tobytes()
+    //     reqExtData = ext_data1 + ext_data2
+    //     reqExtDataSize = len(reqExtData)
+    // this._handleExtendedCommand(EXT_CommandCode.CMD_MOVE_TRAJ_BY_DATA, reqExtData, reqExtDataSize)
   }
 
-  move_ext_traj_txt(traj_type, traj_freq, dat_size, traj_data, dat_num = 3) {
+  move_ext_traj_txt(trajType, trajFreq, datSize, trajData, datNum = 3) {
     //     opt_len = 5
-    //     dat_len = len(traj_data)
-    //     ext_data_size = opt_len + dat_len
-    //     ext_data = [None] * ext_data_size
-    //     ext_data[0] = traj_type
-    //     ext_data[1] = traj_freq
-    //     ext_data[2] = dat_num
-    //     ext_data[3] = dat_size
-    //     ext_data[4] = Math.floor(dat_len/(dat_size*dat_num))  # traj_len
-    //     ext_data[5:-1] = traj_data
+    //     dat_len = len(trajData)
+    //     ext_dataSize = opt_len + dat_len
+    //     ext_data = [None] * ext_dataSize
+    //     ext_data[0] = trajType
+    //     ext_data[1] = trajFreq
+    //     ext_data[2] = datNum
+    //     ext_data[3] = datSize
+    //     ext_data[4] = Math.floor(dat_len/(datSize*datNum))  # traj_len
+    //     ext_data[5:-1] = trajData
     //     ext_data_str = ' '.join(str(e) for e in ext_data)
-    //     req_ext_data = ext_data_str.encode('ascii')
-    //     req_ext_data_size = len(ext_data_str)
-    //     this._handle_extended_command(EXT_CommandCode.CMD_MOVE_TRAJ_BY_TXT_DATA,
-    //                                   req_ext_data,
-    //                                   req_ext_data_size)
+    //     reqExtData = ext_data_str.encode('ascii')
+    //     reqExtDataSize = len(ext_data_str)
+    //     this._handleExtendedCommand(EXT_CommandCode.CMD_MOVE_TRAJ_BY_TXT_DATA,
+    //                                   reqExtData,
+    //                                   reqExtDataSize)
   }
 
-  move_ext_traj_bin_file(file_name) {
-    //     file_name += "\0"  # last char should be null
-    //     req_ext_data = file_name.encode('ascii')
-    //     req_ext_data_size = len(file_name)
-    //     this._handle_extended_command(EXT_CommandCode.CMD_MOVE_TRAJ_BY_FILE,
-    //                                   req_ext_data,
-    //                                   req_ext_data_size)
+  move_ext_traj_bin_file(filename) {
+    //     filename += "\0"  # last char should be null
+    //     reqExtData = filename.encode('ascii')
+    //     reqExtDataSize = len(filename)
+    //     this._handleExtendedCommand(EXT_CommandCode.CMD_MOVE_TRAJ_BY_FILE,
+    //                                   reqExtData,
+    //                                   reqExtDataSize)
   }
 
-  move_ext_traj_txt_file(file_name) {
-    //     file_name += "\0"  # last char should be null
-    //     req_ext_data = file_name.encode('ascii')
-    //     req_ext_data_size = len(file_name)
-    //     this._handle_extended_command(EXT_CommandCode.CMD_MOVE_TRAJ_BY_TXT_FILE,
-    //                                   req_ext_data,
-    //                                   req_ext_data_size)
+  move_ext_traj_txt_file(filename) {
+    //     filename += "\0"  # last char should be null
+    //     reqExtData = filename.encode('ascii')
+    //     reqExtDataSize = len(filename)
+    //     this._handleExtendedCommand(EXT_CommandCode.CMD_MOVE_TRAJ_BY_TXT_FILE,
+    //                                   reqExtData,
+    //                                   reqExtDataSize)
   }
 
   joint_move_to_wp_set() {}
@@ -878,13 +878,13 @@ export class IndyDCPClient implements IIndyDCPClient {
   /* JSON programming added (only for internal engineer) */
   set_json_program() {}
 
-  set_and_start_json_program(json_string) {
-    //     json_string += "\0"
-    //     req_ext_data = json_string.encode('ascii')
-    //     req_ext_data_size = len(json_string)
-    //     this._handle_extended_command(EXT_CommandCode.CMD_SET_JSON_PROG_START,
-    //                                   req_ext_data,
-    //                                   req_ext_data_size)
+  set_and_start_json_program(jsonString) {
+    //     jsonString += "\0"
+    //     reqExtData = jsonString.encode('ascii')
+    //     reqExtDataSize = len(jsonString)
+    //     this._handleExtendedCommand(EXT_CommandCode.CMD_SET_JSON_PROG_START,
+    //                                   reqExtData,
+    //                                   reqExtDataSize)
   }
 
   wait_for_program_finish() {
@@ -894,45 +894,45 @@ export class IndyDCPClient implements IIndyDCPClient {
     //     return GLOBAL_DICT['stop']
   }
 
-  set_workspace(cmd_pos) {
-    //     if np.all(cmd_pos != 0):
+  set_workspace(commandPos) {
+    //     if np.all(commandPos != 0):
     //         return true
     //     else:
     //         return false
   }
 
   /* Teaching points */
-  load_teaching_data(file_name) {
-    //     with open(file_name, "r") as json_file:
-    //         teach_config = json.load(json_file)
-    //         return teach_config
+  load_teaching_data(filename) {
+    //     with open(filename, "r") as jsonFile:
+    //         teachConfig = json.load(jsonFile)
+    //         return teachConfig
   }
 
-  update_teaching_data(file_name, wp_name, j_pos) {
-    //     new_pos = []
+  update_teaching_data(filename, wpName, j_pos) {
+    //     newPos = []
     //     for pos in j_pos:
-    //         new_pos.append(float(pos))
-    //     teach_data = {wp_name: new_pos}
+    //         newPos.append(float(pos))
+    //     teach_data = {wpName: newPos}
     //     # If not an exist file
-    //     if not os.path.isfile(file_name):
-    //         with open(file_name, "w+") as f:
+    //     if not os.path.isfile(filename):
+    //         with open(filename, "w+") as f:
     //             json.dump(teach_data, f)
     //             return teach_data
     //     #
-    //     with open(file_name, "r") as json_file:
-    //         teach_config = json.load(json_file)
-    //         teach_config.update(teach_data)
-    //     with open(file_name, "w+") as json_file:
-    //         json.dump(teach_config, json_file)
-    //         return teach_config
+    //     with open(filename, "r") as jsonFile:
+    //         teachConfig = json.load(jsonFile)
+    //         teachConfig.update(teach_data)
+    //     with open(filename, "w+") as jsonFile:
+    //         json.dump(teachConfig, jsonFile)
+    //         return teachConfig
   }
 
-  del_teaching_data(file_name, wp_name) {
-    //     with open(file_name) as json_file:
-    //         teach_config = json.load(json_file)
-    //         del teach_config[wp_name]
-    //     with open(file_name, 'w') as f:
-    //         json.dump(teach_config, f)
-    //     return teach_config
+  del_teaching_data(filename, wpName) {
+    //     with open(filename) as jsonFile:
+    //         teachConfig = json.load(jsonFile)
+    //         del teachConfig[wpName]
+    //     with open(filename, 'w') as f:
+    //         json.dump(teachConfig, f)
+    //     return teachConfig
   }
 }

@@ -1,5 +1,5 @@
 import Struct from 'struct'
-import { ErrorCode, err_to_string } from './error-code'
+import { ErrorCode, getErrorString } from './error-code'
 import { CommandCode } from './command-code'
 import { IIndyDCPClient } from './const'
 
@@ -57,11 +57,11 @@ export const HeaderCommand = Struct() // need to be packed
   .word32Sbe('dataSize')
   .word32Sbe('status')
   .chars('reserved', 6)
-  .word32Sbe('cmdId')
+  .word32Sbe('command')
 
 export const ExtHeader = Struct() // need to be packed
   .word32Sbe('dataSize')
-  .word32Sbe('cmdId')
+  .word32Sbe('command')
 
 export const DIO = Struct() // DIO struct
   .word32Sle('channel')
@@ -82,7 +82,7 @@ export function parseResPacket(buffer) {
   var header = parsePacketHeader(buffer)
   var data = buffer.slice(SIZE_HEADER_COMMAND)
 
-  if (header.cmdId == CommandCode.CMD_FOR_EXTENDED) {
+  if (header.command == CommandCode.CMD_FOR_EXTENDED) {
     var ext = parseExtHeader(data.slice(0, 8))
     var data = data.slice(8)
   }
@@ -94,30 +94,48 @@ export function parseResPacket(buffer) {
   }
 }
 
+// data type
+export const DTYPES = {
+  char: 1,
+  bool: 1,
+  int: 4,
+  float: 4,
+  double: 8
+}
+
+export const DTRANSFORM = {
+  char: 'UInt8',
+  bool: 'UInt8',
+  int: 'Int32BE',
+  float: 'FloatBE',
+  double: 'DoubleBE'
+}
+
+// packet util functions
 export function buildReqPacket(
   client: IIndyDCPClient,
-  cmd: number,
-  req_data?: any,
-  req_data_size?: number
+  command: number,
+  reqData?: any,
+  reqDataSize?: number
 ): { header: any; buffer: Buffer } {
   var header = HeaderCommand.allocate().fields
   var buffer = HeaderCommand.buffer()
 
-  req_data_size = req_data_size || req_data?.length || 0
+  reqDataSize = reqDataSize || reqData?.length || 0
 
   header.robotName = client.robotName
   header.robotVersion = client.robotVersion
   header.stepInfo = client.stepInfo
   header.sof = client.sofClient
-  header.cmdId = cmd
-  header.dataSize = req_data_size
+  header.command = command
+  header.dataSize = reqDataSize
 
   header.invokeId = ++client.invokeId
 
-  if (req_data_size > 0) {
+  if (reqDataSize > 0) {
     return {
       header,
-      buffer: Buffer.concat([buffer, req_data], buffer.length + req_data_size)
+      buffer: Buffer.concat([buffer, reqData], buffer.length + reqDataSize)
     }
   }
 
@@ -129,24 +147,24 @@ export function buildReqPacket(
 
 export function buildExtReqPacket(
   client: IIndyDCPClient,
-  ext_cmd: number,
-  req_ext_data?: any,
-  req_ext_data_size?: number
+  extCommand: number,
+  reqExtData?: any,
+  reqExtDataSize?: number
 ): any {
   var ext = ExtHeader.allocate().fields
   var extBuffer = ExtHeader.buffer()
 
-  req_ext_data_size = req_ext_data_size || req_ext_data?.length || 0
+  reqExtDataSize = reqExtDataSize || reqExtData?.length || 0
 
-  ext.cmdId = ext_cmd
-  ext.dataSize = req_ext_data_size
+  ext.command = extCommand
+  ext.dataSize = reqExtDataSize
 
   var { header, buffer: packetBuffer } = buildReqPacket(client, CommandCode.CMD_FOR_EXTENDED, extBuffer)
 
-  if (req_ext_data_size > 0) {
+  if (reqExtDataSize > 0) {
     return {
       header,
-      buffer: Buffer.concat([packetBuffer, req_ext_data], packetBuffer.length + req_ext_data_size)
+      buffer: Buffer.concat([packetBuffer, reqExtData], packetBuffer.length + reqExtDataSize)
     }
   }
 
@@ -157,8 +175,8 @@ export function buildExtReqPacket(
   }
 }
 
-export function check_header(reqHeader, resHeader, err_code = ErrorCode.ERR_NONE) {
-  const checklist = ['robotName', 'stepInfo', 'invokeId', 'sof', 'cmdId']
+export function checkHeader(reqHeader, resHeader, errorCode = ErrorCode.ERR_NONE) {
+  const checklist = ['robotName', 'stepInfo', 'invokeId', 'sof', 'command']
 
   for (let prop in checklist) {
     if (reqHeader[prop] !== resHeader[prop]) {
@@ -166,9 +184,9 @@ export function check_header(reqHeader, resHeader, err_code = ErrorCode.ERR_NONE
     }
   }
 
-  if (resHeader.cmdId == CommandCode.CMD_ERROR) {
-    console.log(err_to_string(err_code))
-    return err_code
+  if (resHeader.command == CommandCode.CMD_ERROR) {
+    console.log(getErrorString(errorCode))
+    return errorCode
   }
 
   return ErrorCode.ERR_NONE
