@@ -4,8 +4,13 @@ IndyDCP client module for nodejs.
 
 [IndyDCP](http://docs.neuromeka.com/2.3.0/en/IndyDCP/section1/) bindings for Node.js. IndyDCP is a dedicated communication protocol for controlling Neuromeka's Indy robots - by interfacing with it natively in node,
 
+[Hatiolab](http://www.hatiolab.com) is blah blah.
 [things-factory]() is blah blah.
 we get powerful automation in js.
+
+https://www.youtube.com/playlist?list=PLrcYC3lASr3sXZNC6e-6J-dRoPB2-Efo-
+https://www.youtube.com/playlist?list=PLrcYC3lASr3spRCJIRYqfm3axhMMEoimP
+https://www.youtube.com/playlist?list=PLrcYC3lASr3sFvDlSaHRhTgIDSZ4c3KhO
 
 People are using @things-factory/node-indydcp to fry whole chickens with robots, make coffee or bubble tea, and sort apples and pears.
 If you're using it for something cool, I'd love to hear about it!
