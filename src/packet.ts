@@ -51,17 +51,17 @@ export const TOOMUCH = 10 * 1024 * 1024
 export const HeaderCommand = Struct() // need to be packed
   .chars('robotName', 20)
   .chars('robotVersion', 12)
-  .word8Sbe('stepInfo')
-  .word8Sbe('sof')
-  .word32Sbe('invokeId')
-  .word32Sbe('dataSize')
-  .word32Sbe('status')
+  .word8Sle('stepInfo')
+  .word8Sle('sof')
+  .word32Sle('invokeId')
+  .word32Sle('dataSize')
+  .word32Sle('status')
   .chars('reserved', 6)
-  .word32Sbe('command')
+  .word32Sle('command')
 
 export const ExtHeader = Struct() // need to be packed
-  .word32Sbe('dataSize')
-  .word32Sbe('command')
+  .word32Sle('dataSize')
+  .word32Sle('command')
 
 export const DIO = Struct() // DIO struct
   .word32Sle('channel')
@@ -123,31 +123,31 @@ export const DTRANSFORM = {
   int: {
     serializer(x) {
       var buffer = Buffer.alloc(4)
-      buffer.writeInt32BE(x)
+      buffer.writeInt32LE(x)
       return buffer
     },
     deserializer(buffer) {
-      return buffer.readUInt32BE(0)
+      return buffer.readUInt32LE(0)
     }
   },
   float: {
     serializer(x) {
       var buffer = Buffer.alloc(4)
-      buffer.writeFloatBE(x)
+      buffer.writeFloatLE(x)
       return buffer
     },
     deserializer(buffer) {
-      return buffer.readFloatBE(0)
+      return buffer.readFloatLE(0)
     }
   },
   double: {
     serializer(x) {
       var buffer = Buffer.alloc(8)
-      buffer.writeDoubleBE(x)
+      buffer.writeDoubleLE(x)
       return buffer
     },
     deserializer(buffer) {
-      return buffer.readDoubleBE(0)
+      return buffer.readDoubleLE(0)
     }
   },
   string: {
@@ -171,13 +171,13 @@ export const DTRANSFORM = {
   ints: {
     serializer(xs) {
       var buffer = Buffer.alloc(4 * xs.length)
-      xs.forEach((x, i) => buffer.writeInt32BE(x, i * 4))
+      xs.forEach((x, i) => buffer.writeInt32LE(x, i * 4))
       return buffer
     },
     deserializer(buffer) {
       var array = []
       for (let i = 0; i < Math.floor(buffer.length / 4); i++) {
-        array.push(buffer.readInt32BE(i * 4))
+        array.push(buffer.readInt32LE(i * 4))
       }
       return array
     }
@@ -185,13 +185,13 @@ export const DTRANSFORM = {
   floats: {
     serializer(xs) {
       var buffer = Buffer.alloc(4 * xs.length)
-      xs.forEach((x, i) => buffer.writeFloatBE(x, i * 4))
+      xs.forEach((x, i) => buffer.writeFloatLE(x, i * 4))
       return buffer
     },
     deserializer(buffer) {
       var array = []
       for (let i = 0; i < Math.floor(buffer.length / 4); i++) {
-        array.push(buffer.readFloatBE(i * 4))
+        array.push(buffer.readFloatLE(i * 4))
       }
       return array
     }
@@ -199,13 +199,13 @@ export const DTRANSFORM = {
   doubles: {
     serializer(xs) {
       var buffer = Buffer.alloc(8 * xs.length)
-      xs.forEach((x, i) => buffer.writeDoubleBE(x, i * 8))
+      xs.forEach((x, i) => buffer.writeDoubleLE(x, i * 8))
       return buffer
     },
     deserializer(buffer) {
       var array = []
       for (let i = 0; i < Math.floor(buffer.length / 8); i++) {
-        array.push(buffer.readDoubleBE(i * 8))
+        array.push(buffer.readDoubleLE(i * 8))
       }
       return array
     }

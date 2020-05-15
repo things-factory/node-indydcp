@@ -63,7 +63,7 @@ describe('Decorator', function () {
       await decorated.decorated_int(0x71)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(decorated.reqData.readInt32BE(0)).to.equal(0x71)
+      expect(decorated.reqData.readInt32LE(0)).to.equal(0x71)
     })
 
     it('should have same boolean value in request data', async function () {
@@ -81,7 +81,7 @@ describe('Decorator', function () {
       await decorated.decorated_float(62431)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(decorated.reqData.readFloatBE(0)).to.equal(62431)
+      expect(decorated.reqData.readFloatLE(0)).to.equal(62431)
     })
 
     it('should have same double value in request data', async function () {
@@ -90,7 +90,7 @@ describe('Decorator', function () {
       await decorated.decorated_double(0.00001234)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(decorated.reqData.readDoubleBE(0)).to.equal(0.00001234)
+      expect(decorated.reqData.readDoubleLE(0)).to.equal(0.00001234)
     })
 
     it('should have same string value in request data', async function () {
@@ -108,7 +108,7 @@ describe('Decorator', function () {
       await decorated.decorated_ints([0x71])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(decorated.reqData.readInt32BE(0)).to.equal(0x71)
+      expect(decorated.reqData.readInt32LE(0)).to.equal(0x71)
     })
 
     it('should have same booleans value in request data', async function () {
@@ -126,7 +126,7 @@ describe('Decorator', function () {
       await decorated.decorated_floats([62431])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(decorated.reqData.readFloatBE(0)).to.equal(62431)
+      expect(decorated.reqData.readFloatLE(0)).to.equal(62431)
     })
 
     it('should have same doubles value in request data', async function () {
@@ -135,7 +135,7 @@ describe('Decorator', function () {
       var value = await decorated.decorated_doubles([0.00001234])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(decorated.reqData.readDoubleBE(0)).to.equal(0.00001234)
+      expect(decorated.reqData.readDoubleLE(0)).to.equal(0.00001234)
     })
   })
 
@@ -293,15 +293,15 @@ describe('Decorator', function () {
             break
           case 3: // int
             resData = Buffer.alloc(4)
-            resData.writeInt32BE(0x71)
+            resData.writeInt32LE(0x71)
             break
           case 4: // float
             resData = Buffer.alloc(4)
-            resData.writeFloatBE(12345)
+            resData.writeFloatLE(12345)
             break
           case 5: // double
             resData = Buffer.alloc(8)
-            resData.writeDoubleBE(0.0001234)
+            resData.writeDoubleLE(0.0001234)
             break
           case 11: // string
             resData = Buffer.alloc(2 * 1)
@@ -315,18 +315,18 @@ describe('Decorator', function () {
             break
           case 13: // integers
             resData = Buffer.alloc(2 * 4)
-            resData.writeInt32BE(0x71, 0)
-            resData.writeInt32BE(0x72, 4)
+            resData.writeInt32LE(0x71, 0)
+            resData.writeInt32LE(0x72, 4)
             break
           case 14: // floats
             resData = Buffer.alloc(2 * 4)
-            resData.writeFloatBE(12345, 0)
-            resData.writeFloatBE(12346, 4)
+            resData.writeFloatLE(12345, 0)
+            resData.writeFloatLE(12346, 4)
             break
           case 15: // doubles
             resData = Buffer.alloc(2 * 8)
-            resData.writeDoubleBE(0.0001234, 0)
-            resData.writeDoubleBE(0.0001235, 8)
+            resData.writeDoubleLE(0.0001234, 0)
+            resData.writeDoubleLE(0.0001235, 8)
             break
         }
 
