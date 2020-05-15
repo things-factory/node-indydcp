@@ -1,11 +1,11 @@
 import { expect } from 'chai'
 import AwaitLock from 'await-lock'
 
-import { socket_connect } from '../../src/decorators'
+import { mutex } from '../../src/decorators'
 import { sleep } from '../../src/utils'
 
 describe('Decorator', function () {
-  describe('#socket_connect()', function () {
+  describe('#mutex()', function () {
     class SimpleClazz {
       public lock
       public lockcount = 0
@@ -23,7 +23,7 @@ describe('Decorator', function () {
         }
       }
 
-      @socket_connect
+      @mutex
       decorated() {
         this.executed = true
         return this.releasecount
@@ -45,7 +45,7 @@ describe('Decorator', function () {
       public lock = new AwaitLock()
       public count = 0
 
-      @socket_connect
+      @mutex
       async decorated1() {
         for (let i = 0; i < 100; i++) {
           await sleep(1)
@@ -54,7 +54,7 @@ describe('Decorator', function () {
         return this.count
       }
 
-      @socket_connect
+      @mutex
       async decorated2() {
         for (let i = 0; i < 100; i++) {
           await sleep(1)
