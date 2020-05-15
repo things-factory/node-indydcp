@@ -31,12 +31,27 @@ describe('Decorator', function () {
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'double')
       decorated_double(x) {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'string')
+      decorated_string(x) {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'bools')
+      decorated_bools(x) {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'ints')
+      decorated_ints(x) {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'floats')
+      decorated_floats(x) {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'doubles')
+      decorated_doubles(x) {}
     }
 
     it('should have same charater value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_char('A'.charCodeAt(0))
+      await decorated.decorated_char('A')
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(String.fromCharCode(decorated.reqData.readUInt8(0))).to.equal('A')
@@ -54,7 +69,7 @@ describe('Decorator', function () {
     it('should have same boolean value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_bool(1)
+      await decorated.decorated_bool(true)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readUInt8(0)).to.equal(1)
@@ -78,10 +93,10 @@ describe('Decorator', function () {
       expect(decorated.reqData.readDoubleBE(0)).to.equal(0.00001234)
     })
 
-    it('should have same charaters value in request data', async function () {
+    it('should have same string value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_char(['A'.charCodeAt(0)])
+      await decorated.decorated_string('ABC')
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(String.fromCharCode(decorated.reqData.readUInt8(0))).to.equal('A')
@@ -90,7 +105,7 @@ describe('Decorator', function () {
     it('should have same 32bit integers value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_int([0x71])
+      await decorated.decorated_ints([0x71])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readInt32BE(0)).to.equal(0x71)
@@ -99,7 +114,7 @@ describe('Decorator', function () {
     it('should have same booleans value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_bool([1])
+      await decorated.decorated_bools([true])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readUInt8(0)).to.equal(1)
@@ -108,7 +123,7 @@ describe('Decorator', function () {
     it('should have same floats value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_float([62431])
+      await decorated.decorated_floats([62431])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readFloatBE(0)).to.equal(62431)
@@ -117,7 +132,7 @@ describe('Decorator', function () {
     it('should have same doubles value in request data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_double([0.00001234])
+      var value = await decorated.decorated_doubles([0.00001234])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readDoubleBE(0)).to.equal(0.00001234)
@@ -152,15 +167,30 @@ describe('Decorator', function () {
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'double', 'double')
       decorated_double(x): any {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'string', 'string')
+      decorated_string(xs): any {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'bools', 'bools')
+      decorated_bools(xs): any {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'ints', 'ints')
+      decorated_ints(xs): any {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'floats', 'floats')
+      decorated_floats(xs): any {}
+
+      @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'doubles', 'doubles')
+      decorated_doubles(xs): any {}
     }
 
     it('should have same charater value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_char('A'.charCodeAt(0))
+      var value = await decorated.decorated_char('A')
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(String.fromCharCode(value)).to.equal('A')
+      expect(value).to.equal('A')
     })
 
     it('should have same 32bit integer value in data', async function () {
@@ -175,10 +205,10 @@ describe('Decorator', function () {
     it('should have same boolean value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_bool(1)
+      var value = await decorated.decorated_bool(true)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(value).to.equal(1)
+      expect(value).to.equal(true)
     })
 
     it('should have same float value in data', async function () {
@@ -199,19 +229,19 @@ describe('Decorator', function () {
       expect(value).to.equal(0.00001234)
     })
 
-    it('should have same charaters value in data', async function () {
+    it('should have same string value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_char(['A'.charCodeAt(0), 'B'.charCodeAt(0)])
+      var value = await decorated.decorated_string('ABC')
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(String.fromCharCode(value[0])).to.equal('A')
+      expect(value).to.equal('ABC')
     })
 
     it('should have same 32bit integers value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_int([0x71, 0x72])
+      var value = await decorated.decorated_ints([0x71, 0x72])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(value[0]).to.equal(0x71)
@@ -220,16 +250,16 @@ describe('Decorator', function () {
     it('should have same booleans value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_bool([1, 0])
+      var value = await decorated.decorated_bools([true, false])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
-      expect(value[0]).to.equal(1)
+      expect(value[0]).to.equal(true)
     })
 
     it('should have same floats value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_float([62431, 62432])
+      var value = await decorated.decorated_floats([62431, 62432])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(value[0]).to.equal(62431)
@@ -238,7 +268,7 @@ describe('Decorator', function () {
     it('should have same doubles value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_double([0.00001234, 0.00001235])
+      var value = await decorated.decorated_doubles([0.00001234, 0.00001235])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(value[0]).to.equal(0.00001234)
@@ -273,7 +303,7 @@ describe('Decorator', function () {
             resData = Buffer.alloc(8)
             resData.writeDoubleBE(0.0001234)
             break
-          case 11: // chars
+          case 11: // string
             resData = Buffer.alloc(2 * 1)
             resData.writeUInt8('A'.charCodeAt(0), 0)
             resData.writeUInt8('B'.charCodeAt(0), 1)
@@ -322,19 +352,19 @@ describe('Decorator', function () {
       @packet(5, null, 'double')
       decorated_double(): any {}
 
-      @packet(11, null, 'char')
-      decorated_chars(): any {}
+      @packet(11, null, 'string')
+      decorated_string(): any {}
 
-      @packet(12, null, 'bool')
+      @packet(12, null, 'bools')
       decorated_bools(): any {}
 
-      @packet(13, null, 'int')
+      @packet(13, null, 'ints')
       decorated_ints(): any {}
 
-      @packet(14, null, 'float')
+      @packet(14, null, 'floats')
       decorated_floats(): any {}
 
-      @packet(15, null, 'double')
+      @packet(15, null, 'doubles')
       decorated_doubles(): any {}
     }
 
@@ -343,7 +373,7 @@ describe('Decorator', function () {
 
       var value = await decorated.decorated_char()
 
-      expect(String.fromCharCode(value)).to.equal('A')
+      expect(value).to.equal('A')
     })
 
     it('should have same 32bit integer value in data', async function () {
@@ -359,7 +389,7 @@ describe('Decorator', function () {
 
       var value = await decorated.decorated_bool()
 
-      expect(value).to.equal(1)
+      expect(value).to.equal(true)
     })
 
     it('should have same float value in data', async function () {
@@ -378,12 +408,12 @@ describe('Decorator', function () {
       expect(value).to.equal(0.0001234)
     })
 
-    it('should have same charaters value in data', async function () {
+    it('should have same string value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_chars()
+      var value = await decorated.decorated_string()
 
-      expect(String.fromCharCode(value[0])).to.equal('A')
+      expect(value).to.equal('AB')
     })
 
     it('should have same 32bit integers value in data', async function () {
@@ -399,7 +429,7 @@ describe('Decorator', function () {
 
       var value = await decorated.decorated_bools()
 
-      expect(value[0]).to.equal(1)
+      expect(value[0]).to.equal(true)
     })
 
     it('should have same floats value in data', async function () {

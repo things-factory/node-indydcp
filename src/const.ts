@@ -19,7 +19,7 @@ export enum DirectVariableType {
 export interface IIndyDCPClient {
   JOINT_DOF
   lock
-  sockFd
+  socket
   timeout
   invokeId
   serverIp
@@ -33,11 +33,11 @@ export interface IIndyDCPClient {
   disconnect()
   shutdown()
   setTimeoutSec(timeout)
-  _send_message(buf, size)
-  _recv_message(buf, size)
+  _sendMessage(buf, size)
+  _recvMessage(buf, size)
   getRobotStatus()
-  handleCommand(command, reqData, reqDataSize): { errorCode; resData; resDataSize }
-  handleExtendedCommand(extCommand, reqExtData, reqExtDataSize): { errorCode; resData; resDataSize }
+  handleCommand(command, reqData, reqDataSize): Promise<{ errorCode; resData; resDataSize }>
+  handleExtendedCommand(extCommand, reqExtData, reqExtDataSize): Promise<{ errorCode; resData; resDataSize }>
   /* Robot command function (Check all) */
   check()
   emergency_stop()

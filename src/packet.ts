@@ -104,11 +104,112 @@ export const DTYPES = {
 }
 
 export const DTRANSFORM = {
-  char: 'UInt8',
-  bool: 'UInt8',
-  int: 'Int32BE',
-  float: 'FloatBE',
-  double: 'DoubleBE'
+  char: {
+    serializer(x) {
+      return Buffer.from(Uint8Array.from([x.charCodeAt(0)]))
+    },
+    deserializer(buffer) {
+      return String.fromCharCode(buffer.readUInt8(0))
+    }
+  },
+  bool: {
+    serializer(x) {
+      return Buffer.alloc(1, x)
+    },
+    deserializer(buffer) {
+      return !!buffer.readUInt8(0)
+    }
+  },
+  int: {
+    serializer(x) {
+      var buffer = Buffer.alloc(4)
+      buffer.writeInt32BE(x)
+      return buffer
+    },
+    deserializer(buffer) {
+      return buffer.readUInt32BE(0)
+    }
+  },
+  float: {
+    serializer(x) {
+      var buffer = Buffer.alloc(4)
+      buffer.writeFloatBE(x)
+      return buffer
+    },
+    deserializer(buffer) {
+      return buffer.readFloatBE(0)
+    }
+  },
+  double: {
+    serializer(x) {
+      var buffer = Buffer.alloc(8)
+      buffer.writeDoubleBE(x)
+      return buffer
+    },
+    deserializer(buffer) {
+      return buffer.readDoubleBE(0)
+    }
+  },
+  string: {
+    serializer(xs) {
+      return Buffer.from(xs) /* default 'utf8' */
+    },
+    deserializer(buffer) {
+      return buffer.toString() /* default 'utf8' */
+    }
+  },
+  bools: {
+    serializer(xs) {
+      return Buffer.from(Uint8Array.from(xs.map(x => (x ? 1 : 0))))
+    },
+    deserializer(buffer) {
+      var array = []
+      array.push.apply(array, Uint8Array.from(buffer))
+      return array.map(x => !!x)
+    }
+  },
+  ints: {
+    serializer(xs) {
+      var buffer = Buffer.alloc(4 * xs.length)
+      xs.forEach((x, i) => buffer.writeInt32BE(x, i * 4))
+      return buffer
+    },
+    deserializer(buffer) {
+      var array = []
+      for (let i = 0; i < Math.floor(buffer.length / 4); i++) {
+        array.push(buffer.readInt32BE(i * 4))
+      }
+      return array
+    }
+  },
+  floats: {
+    serializer(xs) {
+      var buffer = Buffer.alloc(4 * xs.length)
+      xs.forEach((x, i) => buffer.writeFloatBE(x, i * 4))
+      return buffer
+    },
+    deserializer(buffer) {
+      var array = []
+      for (let i = 0; i < Math.floor(buffer.length / 4); i++) {
+        array.push(buffer.readFloatBE(i * 4))
+      }
+      return array
+    }
+  },
+  doubles: {
+    serializer(xs) {
+      var buffer = Buffer.alloc(8 * xs.length)
+      xs.forEach((x, i) => buffer.writeDoubleBE(x, i * 8))
+      return buffer
+    },
+    deserializer(buffer) {
+      var array = []
+      for (let i = 0; i < Math.floor(buffer.length / 8); i++) {
+        array.push(buffer.readDoubleBE(i * 8))
+      }
+      return array
+    }
+  }
 }
 
 // packet util functions

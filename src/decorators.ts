@@ -27,47 +27,25 @@ export const packet = (command, reqDataType?, resDataType?) => (
 ): any => {
   const method = descriptor.value
 
-  descriptor.value = function (...args) {
+  descriptor.value = async function (...args) {
     var reqData
+
     if (!reqDataType) {
     } else {
       var data = args[0]
-      var datumSize = DTYPES[reqDataType] || 0
-      var bufferWriteMethod = `write${DTRANSFORM[reqDataType]}`
 
-      if (data instanceof Array) {
-        reqData = Buffer.alloc(datumSize * data.length)
-
-        for (let i = 0; i < data.length; i++) {
-          reqData[bufferWriteMethod](data[i], datumSize * i)
-        }
-      } else {
-        reqData = Buffer.alloc(datumSize)
-        reqData[bufferWriteMethod](data, 0)
-      }
+      var { serializer } = DTRANSFORM[reqDataType]
+      reqData = serializer(data)
     }
 
-    var { errorCode, resData, resDataSize } = this.handleCommand(command, reqData)
+    var { errorCode, resData, resDataSize } = await this.handleCommand(command, reqData)
     if (errorCode) {
       return errorCode
     }
 
     if (resDataType) {
-      var resDatumSize = DTYPES[resDataType] || 0
-      var bufferReadMethod = `read${DTRANSFORM[resDataType]}`
-      var resLength = Math.floor(resDataSize / resDatumSize)
-
-      if (resLength <= 1) {
-        return resData[bufferReadMethod](0)
-      }
-
-      var retval = []
-
-      for (let i = 0; i < resLength; i++) {
-        retval.push(resData[bufferReadMethod](i * resDatumSize))
-      }
-
-      return retval
+      var { deserializer } = DTRANSFORM[resDataType]
+      return deserializer(resData)
     }
   }
 

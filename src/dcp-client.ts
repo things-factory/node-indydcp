@@ -1,4 +1,5 @@
 import { Socket } from 'net'
+import PromiseSocket from 'promise-socket'
 import AwaitLock from 'await-lock'
 
 import { ROBOT_INDYRP2, DirectVariableType, IIndyDCPClient } from './const'
@@ -21,7 +22,7 @@ import { mutex, packet } from './decorators'
 export class IndyDCPClient implements IIndyDCPClient {
   public JOINT_DOF
   public lock
-  public sockFd
+  public socket
   public timeout
   public invokeId
   public serverIp
@@ -43,7 +44,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     this.__lock = new AwaitLock()
 
     this.lock = this.__lock
-    this.sockFd = new Socket()
+    this.socket
     this.timeout = 10
     this.invokeId = 0
     this.serverIp = serverIp
@@ -54,29 +55,22 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   async connect() {
-    // await this.__lock.acquireAsync()
-    this.sockFd = new Socket(Socket.AF_INET, Socket.SOCK_STREAM)
-    try {
-      this.sockFd.connect((this.serverIp, this.__server_port))
+    this.socket = new PromiseSocket(new Socket())
+    this.socket.setEncoding('utf8')
 
-      console.log(`Connect: Server IP (${this.serverIp})`)
-      return true
-    } catch (e) {
-      console.error(e)
-      this.sockFd.close()
-      // this.__lock.release()
-      return false
-    }
+    await this.socket.connect(this.__server_port, this.serverIp)
+
+    console.log(`Connect: Server IP (${this.serverIp})`)
   }
 
   disconnect() {
-    this.sockFd.close()
+    this.socket && this.socket.destroy()
+    this.socket = null
     // this.__lock.release()
   }
 
   shutdown() {
-    this.sockFd.shutdown(Socket.SHUT_RDWR)
-    console.log('Shut down')
+    this.disconnect()
   }
 
   setTimeoutSec(timeout) {
@@ -87,57 +81,31 @@ export class IndyDCPClient implements IIndyDCPClient {
     this.timeout = timeout
   }
 
-  _send_message(buf, size?) {
-    //     dump_buf("SendBytes: ", buf, size)
-    //     total_sent = 0
-    //     while total_sent < size:
-    //         this.sockFd.settimeout(this.timeout)
-    //         sent = this.sockFd.send(buf[total_sent:size])
-    //         if sent == -1:
-    //             console.log('Error: sent == -1')
-    //             return -1
-    //         elif sent == 0:
-    //             # this.__lock.release()
-    //             console.log('Error: sent == 0')
-    //             return -1
-    //         total_sent = total_sent + sent
-    //     return 0
+  async _sendMessage(buf, size?) {
+    await this.socket.write(buf, size || buf.length)
   }
 
-  _recv_message(buf, size?): any {
-    //     chunks = []
-    //     bytes_recd = 0
-    //     while bytes_recd < size:
-    //         this.sockFd.settimeout(this.timeout)
-    //         chunk = this.sockFd.recv(size - bytes_recd)
-    //         if chunk == b'':
-    //             console.log('Error: receive error')
-    //             memset (buf, 0, sizeof (buf))
-    //             # this.__lock.release()
-    //             this.shutdown()
-    //             return -1
-    //         chunks.append(chunk)
-    //         if (bytes_recd + len(chunk)) > sizeof (buf):
-    //             break
-    //         bytes_recd += len(chunk)
-    //     data = b''.join(chunks)
-    //     memset(buf, 0, sizeof (buf))
-    //     memmove(buf, data, len(data))
-    //     return buf
+  async _recvMessage(size) {
+    var message = await this.socket.read(size)
+    if (!message) {
+      throw new Error('socket closed')
+    }
+
+    return Buffer.from(message)
   }
 
-  getRobotStatus() {
-    this.check()
+  async getRobotStatus() {
+    await this.check()
     return this.robotStatus
   }
 
   @mutex
-  handleCommand(command, reqBuffer?, reqBufferSize?): { errorCode; resData; resDataSize } {
+  async handleCommand(command, reqBuffer?, reqBufferSize?): Promise<{ errorCode; resData; resDataSize }> {
     var { header: reqHeader, buffer } = buildReqPacket(command, reqBuffer, reqBufferSize)
-    this._send_message(buffer)
+    await this._sendMessage(buffer)
 
     // Recv header from socket
-    var resHeader = parsePacketHeader(this._recv_message(Buffer.alloc(SIZE_HEADER_COMMAND)))
+    var resHeader = parsePacketHeader(await this._recvMessage(SIZE_HEADER_COMMAND))
 
     // Recv data from socket
     var resDataSize = resHeader.dataSize
@@ -145,7 +113,7 @@ export class IndyDCPClient implements IIndyDCPClient {
       console.log(`Response data size is invalid ${resDataSize} (max: {}): Disconnected`)
       this.disconnect()
     } else {
-      var resData = this._recv_message(Buffer.alloc(resDataSize))
+      var resData = await this._recvMessage(resDataSize)
     }
 
     var errorCode = checkHeader(reqHeader, resHeader, resData.readInt32BE(0))
@@ -159,12 +127,12 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @mutex
-  handleExtendedCommand(extCommand, reqExtData?, reqExtDataSize?): { errorCode; resData; resDataSize } {
+  async handleExtendedCommand(extCommand, reqExtData?, reqExtDataSize?): Promise<{ errorCode; resData; resDataSize }> {
     var { header: reqHeader, buffer } = buildExtReqPacket(extCommand, reqExtData, reqExtDataSize)
-    this._send_message(buffer)
+    await this._sendMessage(buffer)
 
     // Recv header from socket
-    var resHeader = parsePacketHeader(this._recv_message(Buffer.alloc(SIZE_HEADER_COMMAND)))
+    var resHeader = parsePacketHeader(await this._recvMessage(SIZE_HEADER_COMMAND))
 
     // Recv data from socket
     var resDataSize = resHeader.dataSize
@@ -172,7 +140,7 @@ export class IndyDCPClient implements IIndyDCPClient {
       console.log(`Response data size is invalid ${resDataSize} (max: {}): Disconnected`)
       this.disconnect()
     } else {
-      var resData = this._recv_message(Buffer.alloc(resDataSize))
+      var resData = await this._recvMessage(resDataSize)
     }
 
     // Recv extended data from socket
@@ -185,7 +153,7 @@ export class IndyDCPClient implements IIndyDCPClient {
       this.disconnect()
       console.log(`Recv data error: extCommand ${resExtCmd}/${extCommand}`)
     } else if (resExtDataSize > 0) {
-      var resExtData = this._recv_message(Buffer.alloc(resExtDataSize))
+      var resExtData = await this._recvMessage(Buffer.alloc(resExtDataSize))
     }
 
     var errorCode = checkHeader(reqHeader, resHeader, resData.readInt32BE())
@@ -199,9 +167,9 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   /* Robot command function (Check all) */
-  check() {
+  async check() {
     // Get robot status
-    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_CHECK)
+    var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_CHECK)
     if (!errorCode) {
       // TODO
     }
@@ -213,20 +181,20 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_RESET_ROBOT)
   reset_robot() {}
 
-  @packet(CommandCode.CMD_SET_SERVO, 'bool' /* this.JOINT_DOF * 1 */)
+  @packet(CommandCode.CMD_SET_SERVO, 'bools' /* this.JOINT_DOF * 1 */)
   set_servo(arr) {}
 
-  @packet(CommandCode.CMD_SET_BRAKE, 'bool' /* this.JOINT_DOF * 1 */)
+  @packet(CommandCode.CMD_SET_BRAKE, 'bools' /* this.JOINT_DOF * 1 */)
   set_brake(arr) {}
 
   @packet(CommandCode.CMD_STOP)
   stop_motion() {}
 
-  execute_move(command_name) {
+  async execute_move(command_name) {
     var reqData = command_name
     var reqDataSize = command_name.length
 
-    return this.handleCommand(CommandCode.CMD_MOVE, reqData, reqDataSize)
+    return await this.handleCommand(CommandCode.CMD_MOVE, reqData, reqDataSize)
   }
 
   // Move commands
@@ -236,10 +204,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_MOVE_ZERO)
   go_zero() {}
 
-  @packet(CommandCode.CMD_JOINT_MOVE_TO, 'double' /* 7 * 8 */)
+  @packet(CommandCode.CMD_JOINT_MOVE_TO, 'doubles' /* 7 * 8 */)
   _7dof_joint_move_to(q) {}
 
-  @packet(CommandCode.CMD_JOINT_MOVE_TO, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_JOINT_MOVE_TO, 'doubles' /* 6 * 8 */)
   _6dof_joint_move_to(q) {}
 
   joint_move_to(q) {
@@ -250,10 +218,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  @packet(CommandCode.CMD_JOINT_MOVE_BY, 'double' /* 7 * 8 */)
+  @packet(CommandCode.CMD_JOINT_MOVE_BY, 'doubles' /* 7 * 8 */)
   _7dof_joint_move_by(q) {}
 
-  @packet(CommandCode.CMD_JOINT_MOVE_BY, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_JOINT_MOVE_BY, 'doubles' /* 6 * 8 */)
   _6dof_joint_move_by(q) {}
 
   joint_move_by(q) {
@@ -264,10 +232,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  @packet(CommandCode.CMD_TASK_MOVE_TO, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_TASK_MOVE_TO, 'doubles' /* 6 * 8 */)
   task_move_to(p) {}
 
-  @packet(CommandCode.CMD_TASK_MOVE_BY, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_TASK_MOVE_BY, 'doubles' /* 6 * 8 */)
   task_move_by(p) {}
 
   // Program control
@@ -286,7 +254,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_START_DEFAULT_PROGRAM)
   start_default_program() {}
 
-  @packet(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'int' /* 4 */)
+  @packet(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'int')
   set_default_program(idx) {}
 
   @packet(CommandCode.CMD_GET_REGISTERED_DEFAULT_PROGRAM_IDX, null, 'int')
@@ -347,7 +315,7 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   // Simple waypoint program, joint and task.
   // TODO JOINT_DOF 를 접근할 수 없는데...
-  @packet(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'doubles' /* 6 * 8 */)
   push_back_joint_waypoint(q) {}
 
   @packet(CommandCode.CMD_JOINT_POP_BACK_WAYPOINT_SET)
@@ -359,7 +327,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_JOINT_EXECUTE_WAYPOINT_SET)
   execute_joint_waypoints() {}
 
-  @packet(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'doubles' /* 6 * 8 */)
   push_back_task_waypoint(p) {}
 
   @packet(CommandCode.CMD_TASK_POP_BACK_WAYPOINT_SET)
@@ -372,19 +340,19 @@ export class IndyDCPClient implements IIndyDCPClient {
   execute_task_waypoints() {}
 
   // Get/Set some global robot variables
-  @packet(CommandCode.CMD_SET_DEFAULT_TCP, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_SET_DEFAULT_TCP, 'doubles' /* 6 * 8 */)
   set_default_tcp(tcp) {}
 
   @packet(CommandCode.CMD_RESET_DEFAULT_TCP)
   reset_default_tcp() {}
 
-  @packet(CommandCode.CMD_SET_COMP_TCP, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_SET_COMP_TCP, 'doubles' /* 6 * 8 */)
   set_tcp_compensation(tcp) {}
 
   @packet(CommandCode.CMD_RESET_COMP_TCP)
   reset_tcp_compensation() {}
 
-  @packet(CommandCode.CMD_SET_REFFRAME, 'double' /* 6 * 8 */)
+  @packet(CommandCode.CMD_SET_REFFRAME, 'doubles' /* 6 * 8 */)
   set_ref_frame(ref) {}
 
   @packet(CommandCode.CMD_RESET_REFFRAME)
@@ -455,8 +423,8 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_CMODE, null, 'int')
   get_cmode() {}
 
-  get_servo_state() {
-    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_GET_JOINT_STATE)
+  async get_servo_state() {
+    var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_GET_JOINT_STATE)
     if (!errorCode) {
       // result = np.array(resData.char)
       // servo_state = result[0:JOINT_DOF].tolist()
@@ -498,9 +466,9 @@ export class IndyDCPClient implements IIndyDCPClient {
     return 'double'
   }
 
-  get_last_emergency_info() {
+  async get_last_emergency_info() {
     // Check (TODO: represent meaning of results)
-    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_GET_LAST_EMG_INFO)
+    var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_GET_LAST_EMG_INFO)
     if (!errorCode) {
       // ret_code = c_int32()
       // ret_int_arr = (c_int32 * 3)()
@@ -513,11 +481,11 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   // I/O
-  @packet(CommandCode.CMD_GET_SMART_DI, 'int' /* 4 */, 'char')
+  @packet(CommandCode.CMD_GET_SMART_DI, 'int', 'char')
   get_smart_di(idx) {}
 
-  get_smart_dis() {
-    var { errorCode, resData, resDataSize } = this.handleCommand(CommandCode.CMD_GET_SMART_DIS)
+  async get_smart_dis() {
+    var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_GET_SMART_DIS)
     if (errorCode) {
       return errorCode
     } else {
@@ -525,7 +493,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  set_smart_do(idx, val) {
+  async set_smart_do(idx, val) {
     var reqDataSize = 5
     var reqData = Buffer.alloc(reqDataSize)
 
@@ -533,35 +501,35 @@ export class IndyDCPClient implements IIndyDCPClient {
     reqData.writeInt8(val)
     //     memmove(reqData.byte, pointer(c_int32(idx)), sizeof(c_int32))
     //     memmove(addressof(reqData.byte)+4, pointer(c_ubyte(val)), sizeof(c_ubyte))
-    this.handleCommand(CommandCode.CMD_SET_SMART_DO, reqData, reqDataSize)
+    await this.handleCommand(CommandCode.CMD_SET_SMART_DO, reqData, reqDataSize)
   }
 
-  @packet(CommandCode.CMD_SET_SMART_DOS, 'char', 32)
+  @packet(CommandCode.CMD_SET_SMART_DOS, 'string' /* 32 */)
   set_smart_dos(idx) {}
 
-  @packet(CommandCode.CMD_GET_SMART_AI, 'int' /* 4 */, 'int')
+  @packet(CommandCode.CMD_GET_SMART_AI, 'int', 'int')
   get_smart_ai(idx) {}
 
-  set_smart_ao(idx, val) {
+  async set_smart_ao(idx, val) {
     var reqDataSize = 8
     var reqData = Buffer.alloc(reqDataSize)
 
     reqData.writeInt32BE(idx)
     reqData.writeInt32BE(val)
 
-    this.handleCommand(CommandCode.CMD_SET_SMART_AO, reqData, reqDataSize)
+    await this.handleCommand(CommandCode.CMD_SET_SMART_AO, reqData, reqDataSize)
   }
 
-  @packet(CommandCode.CMD_GET_SMART_DO, 'int' /* 4 */, 'char')
+  @packet(CommandCode.CMD_GET_SMART_DO, 'int', 'char')
   get_smart_do(idx) {}
 
   @packet(CommandCode.CMD_GET_SMART_DOS, null, 'char')
   get_smart_dos() {}
 
-  @packet(CommandCode.CMD_GET_SMART_AO, 'int' /* 4 */, 'int')
+  @packet(CommandCode.CMD_GET_SMART_AO, 'int', 'int')
   get_smart_ao(idx) {}
 
-  set_endtool_do(endtool_type, val) {
+  async set_endtool_do(endtool_type, val) {
     // endtool_type:
     // 0: NPN, 1: PNP, 2: Not use, 3: eModi
     var reqDataSize = 5
@@ -570,10 +538,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     reqData.writeInt32BE(endtool_type)
     reqData.writeInt8(val)
 
-    return this.handleCommand(CommandCode.CMD_SET_ENDTOOL_DO, reqData, reqDataSize)
+    return await this.handleCommand(CommandCode.CMD_SET_ENDTOOL_DO, reqData, reqDataSize)
   }
 
-  @packet(CommandCode.CMD_GET_ENDTOOL_DO, 'int' /* 4 */, 'char')
+  @packet(CommandCode.CMD_GET_ENDTOOL_DO, 'int', 'char')
   get_endtool_do(type) {}
 
   // FT sensor implementation
@@ -589,14 +557,14 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_CB_TRANS, null, 'double')
   get_cb_ft_sensor_process() {}
 
-  read_direct_variable(dvType, dvAddr) {
+  async read_direct_variable(dvType, dvAddr) {
     var reqDataSize = 8
     var reqData = Buffer.alloc(reqDataSize)
 
     reqData.writeInt32BE(dvType)
     reqData.writeInt32BE(dvAddr)
 
-    var { errorCode, resData, resDataSize } = this.handleCommand(
+    var { errorCode, resData, resDataSize } = await this.handleCommand(
       CommandCode.CMD_READ_DIRECT_VARIABLE,
       reqData,
       reqDataSize
@@ -643,7 +611,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  read_direct_variables(dvType, dvAddr, dvLen) {
+  async read_direct_variables(dvType, dvAddr, dvLen) {
     if (dvLen > 20) {
       console.log(`Length should be less than 20, but ${dvLen}`)
       return
@@ -656,7 +624,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     reqData.writeInt32BE(dvAddr)
     reqData.writeInt32BE(dvLen)
 
-    var { errorCode, resData, resDataSize } = this.handleCommand(
+    var { errorCode, resData, resDataSize } = await this.handleCommand(
       CommandCode.CMD_READ_DIRECT_VARIABLES,
       reqData,
       reqDataSize
@@ -719,7 +687,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  write_direct_variable(dvType, dvAddr, val) {
+  async write_direct_variable(dvType, dvAddr, val) {
     var reqDataSize = 8
 
     var reqData = Buffer.alloc(reqDataSize)
@@ -756,10 +724,10 @@ export class IndyDCPClient implements IIndyDCPClient {
         console.log('None matched type')
     }
 
-    this.handleCommand(CommandCode.CMD_WRITE_DIRECT_VARIABLE, reqData, reqDataSize)
+    await await this.handleCommand(CommandCode.CMD_WRITE_DIRECT_VARIABLE, reqData, reqDataSize)
   }
 
-  write_direct_variables(dvType, dvAddr, dvLen, val) {
+  async write_direct_variables(dvType, dvAddr, dvLen, val) {
     var reqDataSize = 12
     var reqData = Buffer.alloc(reqDataSize)
 
@@ -806,11 +774,11 @@ export class IndyDCPClient implements IIndyDCPClient {
         console.log('None matched type')
     }
 
-    this.handleCommand(CommandCode.CMD_WRITE_DIRECT_VARIABLES, reqData, reqDataSize)
+    await this.handleCommand(CommandCode.CMD_WRITE_DIRECT_VARIABLES, reqData, reqDataSize)
   }
 
   // Not released
-  @packet(CommandCode.CMD_SET_REDUCED_MODE, 'bool', 1)
+  @packet(CommandCode.CMD_SET_REDUCED_MODE, 'bool')
   set_reduced_mode(mode) {}
 
   @packet(CommandCode.CMD_SET_REDUCED_SPEED_RATIO, 'double')

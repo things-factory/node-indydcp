@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "await-lock": "^2.0.1",
-    "cpp-struct-js": "^1.0.0",
+    "promise-socket": "^6.0.3",
     "struct": "^0.0.12"
   },
   "devDependencies": {
