@@ -38,14 +38,23 @@ export const packet = (command, reqDataType?, resDataType?) => (
       reqData = serializer(data)
     }
 
+    var callback = await method.apply(this, args)
+
     var { errorCode, resData, resDataSize } = await this.handleCommand(command, reqData)
     if (errorCode) {
       return errorCode
     }
 
+    var result
     if (resDataType) {
       var { deserializer } = DTRANSFORM[resDataType]
-      return deserializer(resData)
+      result = deserializer(resData)
+    }
+
+    if (callback) {
+      return callback(result)
+    } else {
+      return result
     }
   }
 

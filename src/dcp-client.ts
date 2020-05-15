@@ -429,24 +429,18 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_CMODE, null, 'int')
   get_cmode() {}
 
-  async get_servo_state() {
-    var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_GET_JOINT_STATE)
-    if (!errorCode) {
-      // result = np.array(resData.char)
-      // servo_state = result[0:JOINT_DOF].tolist()
-      // brake_state = result[JOINT_DOF:2*JOINT_DOF].tolist()
-      // return servo_state, brake_state
+  @packet(CommandCode.CMD_GET_JOINT_STATE, null, 'bools')
+  get_servo_state() {
+    return value => {
+      return {
+        servoState: value.slice(0, this.JOINT_DOF),
+        brakeState: value.slice(this.JOINT_DOF)
+      }
     }
   }
 
   @packet(CommandCode.CMD_GET_JOINT_POSITION, null, 'doubles')
-  async get_joint_pos() {
-    // if (this.JOINT_DOF == 7) {
-    //   return 'double7dArr'
-    // } else {
-    //   return 'double'
-    // }
-  }
+  async get_joint_pos() {}
 
   @packet(CommandCode.CMD_GET_JOINT_VELOCITY, null, 'doubles')
   get_joint_vel() {}
@@ -478,61 +472,56 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_SMART_DI, 'int', 'char')
   get_smart_di(idx) {}
 
-  async get_smart_dis() {
-    var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_GET_SMART_DIS)
-    if (errorCode) {
-      return errorCode
-    } else {
-      // return np.array(resData.char).tolist()[0:32]
-    }
-  }
+  @packet(CommandCode.CMD_GET_SMART_DIS, null, 'bools')
+  async get_smart_dis() {}
 
+  // TODO implement array type request
+  @packet(CommandCode.CMD_SET_SMART_DO, ['int', 'bool'])
   async set_smart_do(idx, val) {
-    var reqDataSize = 5
-    var reqData = Buffer.alloc(reqDataSize)
-
-    reqData.writeInt32LE(4 * idx)
-    reqData.writeInt8(val)
-    //     memmove(reqData.byte, pointer(c_int32(idx)), sizeof(c_int32))
-    //     memmove(addressof(reqData.byte)+4, pointer(c_ubyte(val)), sizeof(c_ubyte))
-    await this.handleCommand(CommandCode.CMD_SET_SMART_DO, reqData, reqDataSize)
+    // var reqDataSize = 5
+    // var reqData = Buffer.alloc(reqDataSize)
+    // reqData.writeInt32LE(4 * idx)
+    // reqData.writeInt8(val)
+    // //     memmove(reqData.byte, pointer(c_int32(idx)), sizeof(c_int32))
+    // //     memmove(addressof(reqData.byte)+4, pointer(c_ubyte(val)), sizeof(c_ubyte))
+    // await this.handleCommand(CommandCode.CMD_SET_SMART_DO, reqData, reqDataSize)
   }
 
-  @packet(CommandCode.CMD_SET_SMART_DOS, 'string' /* 32 */)
+  @packet(CommandCode.CMD_SET_SMART_DOS, 'bools' /* 32 */)
   set_smart_dos(idx) {}
 
   @packet(CommandCode.CMD_GET_SMART_AI, 'int', 'int')
   get_smart_ai(idx) {}
 
+  // TODO implement array type request
+  @packet(CommandCode.CMD_SET_SMART_AO, ['int', 'int'])
   async set_smart_ao(idx, val) {
-    var reqDataSize = 8
-    var reqData = Buffer.alloc(reqDataSize)
-
-    reqData.writeInt32LE(idx)
-    reqData.writeInt32LE(val)
-
-    await this.handleCommand(CommandCode.CMD_SET_SMART_AO, reqData, reqDataSize)
+    // var reqDataSize = 8
+    // var reqData = Buffer.alloc(reqDataSize)
+    // reqData.writeInt32LE(idx)
+    // reqData.writeInt32LE(val)
+    // await this.handleCommand(CommandCode.CMD_SET_SMART_AO, reqData, reqDataSize)
   }
 
-  @packet(CommandCode.CMD_GET_SMART_DO, 'int', 'char')
+  @packet(CommandCode.CMD_GET_SMART_DO, 'int', 'bool')
   get_smart_do(idx) {}
 
-  @packet(CommandCode.CMD_GET_SMART_DOS, null, 'char')
+  @packet(CommandCode.CMD_GET_SMART_DOS, null, 'bools')
   get_smart_dos() {}
 
   @packet(CommandCode.CMD_GET_SMART_AO, 'int', 'int')
   get_smart_ao(idx) {}
 
+  // TODO implement array type request
+  @packet(CommandCode.CMD_SET_ENDTOOL_DO, ['int', 'bool'])
   async set_endtool_do(endtool_type, val) {
     // endtool_type:
     // 0: NPN, 1: PNP, 2: Not use, 3: eModi
-    var reqDataSize = 5
-    var reqData = Buffer.alloc(reqDataSize)
-
-    reqData.writeInt32LE(endtool_type)
-    reqData.writeInt8(val)
-
-    return await this.handleCommand(CommandCode.CMD_SET_ENDTOOL_DO, reqData, reqDataSize)
+    // var reqDataSize = 5
+    // var reqData = Buffer.alloc(reqDataSize)
+    // reqData.writeInt32LE(endtool_type)
+    // reqData.writeInt8(val)
+    // return await this.handleCommand(CommandCode.CMD_SET_ENDTOOL_DO, reqData, reqDataSize)
   }
 
   @packet(CommandCode.CMD_GET_ENDTOOL_DO, 'int', 'char')
@@ -551,133 +540,127 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_CB_TRANS, null, 'double')
   get_cb_ft_sensor_process() {}
 
+  // TODO implement array type request, and 'any' type response
+  @packet(CommandCode.CMD_READ_DIRECT_VARIABLE, ['int', 'int'], 'any')
   async read_direct_variable(dvType, dvAddr) {
-    var reqDataSize = 8
-    var reqData = Buffer.alloc(reqDataSize)
+    // var reqDataSize = 8
+    // var reqData = Buffer.alloc(reqDataSize)
 
-    reqData.writeInt32LE(dvType)
-    reqData.writeInt32LE(dvAddr)
+    // reqData.writeInt32LE(dvType)
+    // reqData.writeInt32LE(dvAddr)
 
-    var { errorCode, resData, resDataSize } = await this.handleCommand(
-      CommandCode.CMD_READ_DIRECT_VARIABLE,
-      reqData,
-      reqDataSize
-    )
+    // var { errorCode, resData, resDataSize } = await this.handleCommand(
+    //   CommandCode.CMD_READ_DIRECT_VARIABLE,
+    //   reqData,
+    //   reqDataSize
+    // )
 
-    if (errorCode) {
-      return errorCode
-    }
+    // if (errorCode) {
+    //   return errorCode
+    // }
 
-    switch (dvType) {
-      case DirectVariableType.BYTE: // B
-      // if resDataSize == 1:
-      //     return np.array(resData.byteVal)
-      case DirectVariableType.WORD: // W
-      // if resDataSize == 2:
-      //     val = np.array(resData.wordVal).tolist()
-      //     console.log(val)
-      //     res = int.from_bytes(val, byteorder='little', signed=true)
-      //     return res
-      case DirectVariableType.DWORD: // I
-      // if resDataSize == 4:
-      //     val = np.array(resData.dwordVal).tolist()
-      //     res = int.from_bytes(val, byteorder='little', signed=true)
-      //     return res
-      case DirectVariableType.LWORD: // L
-      // if resDataSize == 8:
-      //     val = np.array(resData.lwordVal).tolist()
-      //     res = int.from_bytes(val, byteorder='little', signed=true)
-      //     return res
-      case DirectVariableType.FLOAT: // F
-      // if resDataSize == 4:
-      //     return np.array(resData.floatVal)
-      case DirectVariableType.DFLOAT: // D
-      // if resDataSize == 8:
-      //     return np.array(resData.double)
-      case DirectVariableType.MODBUS_REG: // M
-      // if resDataSize == 2:
-      //     val = np.array(resData.uwordVal).tolist()
-      //     res = int.from_bytes(val, byteorder='little', signed=false)
-      //     return res
-      default:
-        console.log('None matched type')
-        return false
+    // value should be Buffer
+    return value => {
+      var buffer: Buffer = value
+      switch (dvType) {
+        case DirectVariableType.BYTE: // B
+          return buffer.readInt8(0)
+        case DirectVariableType.WORD: // W
+          return buffer.readInt16LE(0)
+        case DirectVariableType.DWORD: // I
+          return buffer.readInt32LE(0)
+        case DirectVariableType.LWORD: // L
+          return buffer.readBigInt64LE(0)
+        case DirectVariableType.FLOAT: // F
+          return buffer.readFloatLE(0)
+        case DirectVariableType.DFLOAT: // D
+          return buffer.readDoubleLE
+        case DirectVariableType.MODBUS_REG: // M
+          return buffer.readUInt16LE(0)
+        default:
+          console.log('None matched type')
+          return false
+      }
     }
   }
 
+  @packet(CommandCode.CMD_READ_DIRECT_VARIABLES, ['int', 'int', 'int'], 'any')
   async read_direct_variables(dvType, dvAddr, dvLen) {
-    if (dvLen > 20) {
-      console.log(`Length should be less than 20, but ${dvLen}`)
-      return
-    }
+    // if (dvLen > 20) {
+    //   console.log(`Length should be less than 20, but ${dvLen}`)
+    //   return
+    // }
 
-    var reqDataSize = 12
-    var reqData = Buffer.alloc(reqDataSize)
+    // var reqDataSize = 12
+    // var reqData = Buffer.alloc(reqDataSize)
 
-    reqData.writeInt32LE(dvType)
-    reqData.writeInt32LE(dvAddr)
-    reqData.writeInt32LE(dvLen)
+    // reqData.writeInt32LE(dvType)
+    // reqData.writeInt32LE(dvAddr)
+    // reqData.writeInt32LE(dvLen)
 
-    var { errorCode, resData, resDataSize } = await this.handleCommand(
-      CommandCode.CMD_READ_DIRECT_VARIABLES,
-      reqData,
-      reqDataSize
-    )
+    // var { errorCode, resData, resDataSize } = await this.handleCommand(
+    //   CommandCode.CMD_READ_DIRECT_VARIABLES,
+    //   reqData,
+    //   reqDataSize
+    // )
 
-    if (errorCode) {
-      return errorCode
-    }
+    // if (errorCode) {
+    //   return errorCode
+    // }
 
-    switch (dvType) {
-      case DirectVariableType.BYTE: // B
-      // if resDataSize == 1*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         res.append(np.array(resData.byteArr)[dv_n])
-      //     return res
-      case DirectVariableType.WORD: // W
-      // if resDataSize == 2*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         val = np.array(resData.wordArr)[dv_n].tolist()
-      //         res.append(int.from_bytes(val, byteorder='little', signed=true))
-      //     return res
-      case DirectVariableType.DWORD: // I
-      // if resDataSize == 4*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         val = np.array(resData.dwordArr)[dv_n].tolist()
-      //         res.append(int.from_bytes(val, byteorder='little', signed=true))
-      //     return res
-      case DirectVariableType.LWORD: // L
-      // if resDataSize == 8*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         val = np.array(resData.lwordArr)[dv_n].tolist()
-      //         res.append(int.from_bytes(val, byteorder='little', signed=true))
-      //     return res
-      case DirectVariableType.FLOAT: // F
-      // if resDataSize == 4*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         res.append(np.array(resData.floatArr)[dv_n])
-      //     return res
-      case DirectVariableType.DFLOAT: // D
-      // if resDataSize == 8*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         res.append(np.array(resData.doubleArr)[dv_n])
-      //     return res
-      case DirectVariableType.MODBUS_REG: // M
-      // if resDataSize == 2*dvLen:
-      //     res = []
-      //     for dv_n in range(0, dvLen):
-      //         val = np.array(resData.uwordArr)[dv_n].tolist()
-      //         res.append(int.from_bytes(val, byteorder='little', signed=false))
-      //     return res
-      default:
-        console.log('None matched type')
-        return false
+    return value => {
+      var buffer: Buffer = value
+      switch (dvType) {
+        case DirectVariableType.BYTE: // B
+        // if resDataSize == 1*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         res.append(np.array(resData.byteArr)[dv_n])
+        //     return res
+        case DirectVariableType.WORD: // W
+        // if resDataSize == 2*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         val = np.array(resData.wordArr)[dv_n].tolist()
+        //         res.append(int.from_bytes(val, byteorder='little', signed=true))
+        //     return res
+        case DirectVariableType.DWORD: // I
+        // if resDataSize == 4*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         val = np.array(resData.dwordArr)[dv_n].tolist()
+        //         res.append(int.from_bytes(val, byteorder='little', signed=true))
+        //     return res
+        case DirectVariableType.LWORD: // L
+        // if resDataSize == 8*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         val = np.array(resData.lwordArr)[dv_n].tolist()
+        //         res.append(int.from_bytes(val, byteorder='little', signed=true))
+        //     return res
+        case DirectVariableType.FLOAT: // F
+        // if resDataSize == 4*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         res.append(np.array(resData.floatArr)[dv_n])
+        //     return res
+        case DirectVariableType.DFLOAT: // D
+        // if resDataSize == 8*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         res.append(np.array(resData.doubleArr)[dv_n])
+        //     return res
+        case DirectVariableType.MODBUS_REG: // M
+        // if resDataSize == 2*dvLen:
+        //     res = []
+        //     for dv_n in range(0, dvLen):
+        //         val = np.array(resData.uwordArr)[dv_n].tolist()
+        //         res.append(int.from_bytes(val, byteorder='little', signed=false))
+        //     return res
+        default:
+          console.log('None matched type')
+          return false
+      }
     }
   }
 
