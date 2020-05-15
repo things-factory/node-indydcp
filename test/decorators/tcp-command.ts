@@ -1,11 +1,5 @@
 import { expect } from 'chai'
-import {
-  socket_connect,
-  tcp_command,
-  tcp_command_rec,
-  tcp_command_req,
-  tcp_command_req_rec
-} from '../../src/decorators'
+import { socket_connect, tcp_command, tcp_command_rec, tcp_command_req, packet } from '../../src/decorators'
 
 describe('Decorator', function () {
   describe('#tcp_command()', function () {

@@ -15,7 +15,7 @@ import {
   buildExtReqPacket,
   checkHeader
 } from './packet'
-import { socket_connect, tcp_command, tcp_command_rec, tcp_command_req, tcp_command_req_rec } from './decorators'
+import { socket_connect, tcp_command, tcp_command_rec, packet } from './decorators'
 
 /* Indy Client Class */
 export class IndyDCPClient implements IIndyDCPClient {
@@ -148,7 +148,7 @@ export class IndyDCPClient implements IIndyDCPClient {
       var resData = this._recv_message(Buffer.alloc(resDataSize))
     }
 
-    var errorCode = checkHeader(reqHeader, resHeader, resData.readInt32BE())
+    var errorCode = checkHeader(reqHeader, resHeader, resData.readInt32BE(0))
     this.robotStatus = RobotStatus.from(resHeader.status)
 
     return {
@@ -213,10 +213,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_RESET_ROBOT)
   reset_robot() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_SERVO, 'bool', this.JOINT_DOF * 1)
+  @packet(CommandCode.CMD_SET_SERVO, 'bool' /* this.JOINT_DOF * 1 */)
   set_servo(arr) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_BRAKE, 'bool', this.JOINT_DOF * 1)
+  @packet(CommandCode.CMD_SET_BRAKE, 'bool' /* this.JOINT_DOF * 1 */)
   set_brake(arr) {}
 
   @tcp_command(CommandCode.CMD_STOP)
@@ -236,10 +236,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_MOVE_ZERO)
   go_zero() {}
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_TO, 'double', 7 * 8)
+  @packet(CommandCode.CMD_JOINT_MOVE_TO, 'double' /* 7 * 8 */)
   _7dof_joint_move_to(q) {}
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_TO, 'double', 6 * 8)
+  @packet(CommandCode.CMD_JOINT_MOVE_TO, 'double' /* 6 * 8 */)
   _6dof_joint_move_to(q) {}
 
   joint_move_to(q) {
@@ -250,10 +250,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_BY, 'double', 7 * 8)
+  @packet(CommandCode.CMD_JOINT_MOVE_BY, 'double' /* 7 * 8 */)
   _7dof_joint_move_by(q) {}
 
-  @tcp_command_req(CommandCode.CMD_JOINT_MOVE_BY, 'double', 6 * 8)
+  @packet(CommandCode.CMD_JOINT_MOVE_BY, 'double' /* 6 * 8 */)
   _6dof_joint_move_by(q) {}
 
   joint_move_by(q) {
@@ -264,10 +264,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  @tcp_command_req(CommandCode.CMD_TASK_MOVE_TO, 'double', 6 * 8)
+  @packet(CommandCode.CMD_TASK_MOVE_TO, 'double' /* 6 * 8 */)
   task_move_to(p) {}
 
-  @tcp_command_req(CommandCode.CMD_TASK_MOVE_BY, 'double', 6 * 8)
+  @packet(CommandCode.CMD_TASK_MOVE_BY, 'double' /* 6 * 8 */)
   task_move_by(p) {}
 
   // Program control
@@ -286,7 +286,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_START_DEFAULT_PROGRAM)
   start_default_program() {}
 
-  @tcp_command_req(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'int', 4)
+  @packet(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'int', 4)
   set_default_program(idx) {}
 
   @tcp_command_rec(CommandCode.CMD_GET_REGISTERED_DEFAULT_PROGRAM_IDX, 'int')
@@ -347,7 +347,7 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   // Simple waypoint program, joint and task.
   // TODO JOINT_DOF 를 접근할 수 없는데...
-  @tcp_command_req(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'double', 6 * 8)
+  @packet(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'double' /* 6 * 8 */)
   push_back_joint_waypoint(q) {}
 
   @tcp_command(CommandCode.CMD_JOINT_POP_BACK_WAYPOINT_SET)
@@ -359,7 +359,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   @tcp_command(CommandCode.CMD_JOINT_EXECUTE_WAYPOINT_SET)
   execute_joint_waypoints() {}
 
-  @tcp_command_req(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'double', 6 * 8)
+  @packet(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'double' /* 6 * 8 */)
   push_back_task_waypoint(p) {}
 
   @tcp_command(CommandCode.CMD_TASK_POP_BACK_WAYPOINT_SET)
@@ -372,48 +372,48 @@ export class IndyDCPClient implements IIndyDCPClient {
   execute_task_waypoints() {}
 
   // Get/Set some global robot variables
-  @tcp_command_req(CommandCode.CMD_SET_DEFAULT_TCP, 'double', 6 * 8)
+  @packet(CommandCode.CMD_SET_DEFAULT_TCP, 'double' /* 6 * 8 */)
   set_default_tcp(tcp) {}
 
   @tcp_command(CommandCode.CMD_RESET_DEFAULT_TCP)
   reset_default_tcp() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_COMP_TCP, 'double', 6 * 8)
+  @packet(CommandCode.CMD_SET_COMP_TCP, 'double' /* 6 * 8 */)
   set_tcp_compensation(tcp) {}
 
   @tcp_command(CommandCode.CMD_RESET_COMP_TCP)
   reset_tcp_compensation() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_REFFRAME, 'double', 6 * 8)
+  @packet(CommandCode.CMD_SET_REFFRAME, 'double' /* 6 * 8 */)
   set_ref_frame(ref) {}
 
   @tcp_command(CommandCode.CMD_RESET_REFFRAME)
   reset_ref_frame() {}
 
-  @tcp_command_req(CommandCode.CMD_SET_COLLISION_LEVEL, 'int', 4)
+  @packet(CommandCode.CMD_SET_COLLISION_LEVEL, 'int', 4)
   set_collision_level(level) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_JOINT_BOUNDARY, 'int', 4)
+  @packet(CommandCode.CMD_SET_JOINT_BOUNDARY, 'int', 4)
   set_joint_speed_level(level) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_BOUNDARY, 'int', 4)
+  @packet(CommandCode.CMD_SET_TASK_BOUNDARY, 'int', 4)
   set_task_speed_level(level) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_JOINT_WTIME, 'double', 8)
+  @packet(CommandCode.CMD_SET_JOINT_WTIME, 'double', 8)
   set_joint_waypoint_time(time) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_WTIME, 'double', 8)
+  @packet(CommandCode.CMD_SET_TASK_WTIME, 'double', 8)
   set_task_waypoint_time(time) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_CMODE, 'int', 4)
+  @packet(CommandCode.CMD_SET_TASK_CMODE, 'int', 4)
   set_task_base_mode(mode) {
     // 0: reference body, 1: end-effector tool tip
   }
 
-  @tcp_command_req(CommandCode.CMD_SET_JOINT_BLEND_RADIUS, 'double', 8)
+  @packet(CommandCode.CMD_SET_JOINT_BLEND_RADIUS, 'double', 8)
   set_joint_blend_radius(radius) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_TASK_BLEND_RADIUS, 'double', 8)
+  @packet(CommandCode.CMD_SET_TASK_BLEND_RADIUS, 'double', 8)
   set_task_blend_radius(radius) {}
 
   @tcp_command_rec(CommandCode.CMD_GET_DEFAULT_TCP, 'double')
@@ -513,7 +513,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   // I/O
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_DI, 'int', 4, 'char')
+  @packet(CommandCode.CMD_GET_SMART_DI, 'int' /* 4 */, 'char')
   get_smart_di(idx) {}
 
   get_smart_dis() {
@@ -536,10 +536,10 @@ export class IndyDCPClient implements IIndyDCPClient {
     this.handleCommand(CommandCode.CMD_SET_SMART_DO, reqData, reqDataSize)
   }
 
-  @tcp_command_req(CommandCode.CMD_SET_SMART_DOS, 'char', 32)
+  @packet(CommandCode.CMD_SET_SMART_DOS, 'char', 32)
   set_smart_dos(idx) {}
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_AI, 'int', 4, 'int')
+  @packet(CommandCode.CMD_GET_SMART_AI, 'int' /* 4 */, 'int')
   get_smart_ai(idx) {}
 
   set_smart_ao(idx, val) {
@@ -552,13 +552,13 @@ export class IndyDCPClient implements IIndyDCPClient {
     this.handleCommand(CommandCode.CMD_SET_SMART_AO, reqData, reqDataSize)
   }
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_DO, 'int', 4, 'char')
+  @packet(CommandCode.CMD_GET_SMART_DO, 'int' /* 4 */, 'char')
   get_smart_do(idx) {}
 
   @tcp_command_rec(CommandCode.CMD_GET_SMART_DOS, 'char')
   get_smart_dos() {}
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_SMART_AO, 'int', 4, 'int')
+  @packet(CommandCode.CMD_GET_SMART_AO, 'int' /* 4 */, 'int')
   get_smart_ao(idx) {}
 
   set_endtool_do(endtool_type, val) {
@@ -573,7 +573,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     return this.handleCommand(CommandCode.CMD_SET_ENDTOOL_DO, reqData, reqDataSize)
   }
 
-  @tcp_command_req_rec(CommandCode.CMD_GET_ENDTOOL_DO, 'int', 4, 'char')
+  @packet(CommandCode.CMD_GET_ENDTOOL_DO, 'int' /* 4 */, 'char')
   get_endtool_do(type) {}
 
   // FT sensor implementation
@@ -810,10 +810,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   // Not released
-  @tcp_command_req(CommandCode.CMD_SET_REDUCED_MODE, 'bool', 1)
+  @packet(CommandCode.CMD_SET_REDUCED_MODE, 'bool', 1)
   set_reduced_mode(mode) {}
 
-  @tcp_command_req(CommandCode.CMD_SET_REDUCED_SPEED_RATIO, 'double', 8)
+  @packet(CommandCode.CMD_SET_REDUCED_SPEED_RATIO, 'double', 8)
   set_reduced_speed_ratio(ratio) {}
 
   @tcp_command_rec(CommandCode.CMD_GET_REDUCED_MODE, 'bool')

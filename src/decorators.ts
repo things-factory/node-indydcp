@@ -64,36 +64,36 @@ export const tcp_command_rec = (command, dataType) => (
  * decorated 함수는 실제로 아무런 구현이 없다.
  * TODO around intercept 방식과 다중 decorator를 사용해서, 많은 종류의 데코레이터가 필요하지 않도록 구조를 잡자.
  */
-export const tcp_command_req = (command, dataType, size?) => (
-  target: Object,
-  property: string,
-  descriptor: TypedPropertyDescriptor<any>
-): any => {
-  const method = descriptor.value
+// export const tcp_command_req = (command, dataType, size?) => (
+//   target: Object,
+//   property: string,
+//   descriptor: TypedPropertyDescriptor<any>
+// ): any => {
+//   const method = descriptor.value
 
-  descriptor.value = function (...args) {
-    var data = args[0]
-    var datumSize = DTYPES[dataType] || 0
-    var bufferWriteMethod = `write${DTRANSFORM[dataType]}`
+//   descriptor.value = function (...args) {
+//     var data = args[0]
+//     var datumSize = DTYPES[dataType] || 0
+//     var bufferWriteMethod = `write${DTRANSFORM[dataType]}`
 
-    if (data instanceof Array) {
-      var reqData = Buffer.alloc(datumSize * data.length)
+//     if (data instanceof Array) {
+//       var reqData = Buffer.alloc(datumSize * data.length)
 
-      for (let i = 0; i < data.length; i++) {
-        reqData[bufferWriteMethod](data[i], datumSize * i)
-      }
-    } else {
-      var reqData = Buffer.alloc(datumSize)
-      reqData[bufferWriteMethod](data, 0)
-    }
+//       for (let i = 0; i < data.length; i++) {
+//         reqData[bufferWriteMethod](data[i], datumSize * i)
+//       }
+//     } else {
+//       var reqData = Buffer.alloc(datumSize)
+//       reqData[bufferWriteMethod](data, 0)
+//     }
 
-    this.handleCommand(command, reqData)
+//     this.handleCommand(command, reqData)
 
-    return method.apply(this, args)
-  }
+//     return method.apply(this, args)
+//   }
 
-  return descriptor
-}
+//   return descriptor
+// }
 
 /*
  * 요청 패킷을 구성하기 위한 커맨드와 데이타에 포함될 데이타의 형식을 지정하고, 응답 패킷으로부터 받게될 응답데이타 형식을 지정한다.
@@ -102,7 +102,7 @@ export const tcp_command_req = (command, dataType, size?) => (
  * decorated 함수는 실제로 아무런 구현이 없다.
  * TODO tcp_command_req 데코레이터와 통합할 수 있다.
  */
-export const tcp_command_req_rec = (command, dataType, dataSize, dataTypeRec?) => (
+export const packet = (command, reqDataType, resDataType?) => (
   target: Object,
   property: string,
   descriptor: TypedPropertyDescriptor<any>
@@ -111,8 +111,8 @@ export const tcp_command_req_rec = (command, dataType, dataSize, dataTypeRec?) =
 
   descriptor.value = function (...args) {
     var data = args[0]
-    var datumSize = DTYPES[dataType] || 0
-    var bufferWriteMethod = `write${DTRANSFORM[dataType]}`
+    var datumSize = DTYPES[reqDataType] || 0
+    var bufferWriteMethod = `write${DTRANSFORM[reqDataType]}`
 
     if (data instanceof Array) {
       var reqData = Buffer.alloc(datumSize * data.length)
@@ -130,17 +130,18 @@ export const tcp_command_req_rec = (command, dataType, dataSize, dataTypeRec?) =
       return errorCode
     }
 
-    dataTypeRec = method.apply(this, args) || dataTypeRec
+    if (resDataType) {
+      var resDatumSize = DTYPES[resDataType] || 0
+      var bufferReadMethod = `read${DTRANSFORM[resDataType]}`
+      console.log('bufferReadMethod', bufferReadMethod)
+      var retval = []
 
-    var recDatumSize = DTYPES[dataTypeRec] || 0
-    var bufferReadMethod = `read${DTRANSFORM[dataTypeRec]}`
-    var retval = []
+      for (let i = 0; i < Math.floor(resDataSize / resDatumSize); i++) {
+        retval.push(resData[bufferReadMethod](i * resDatumSize))
+      }
 
-    for (let i = 0; i < Math.floor(resDataSize / recDatumSize); i++) {
-      retval.push(resData[bufferReadMethod](i * recDatumSize))
+      return retval
     }
-
-    return retval
   }
 
   return descriptor
