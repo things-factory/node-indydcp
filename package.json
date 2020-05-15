@@ -9,7 +9,7 @@
     "build": "npm run clean && npx tsc"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "await-lock": "^2.0.1",
     "promise-socket": "^6.0.3",
