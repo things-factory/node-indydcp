@@ -4,6 +4,8 @@ import { sleep } from '../../src/utils'
 
 describe('IndyDCPClient', function () {
   describe('#get_joint_pos()', function () {
+    this.timeout(10000)
+
     it('should return binary string', async () => {
       var client = new IndyDCPClient('192.168.1.207', 'NRMK-Indy7')
       await client.connect()

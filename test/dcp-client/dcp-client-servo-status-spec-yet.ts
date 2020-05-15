@@ -5,6 +5,8 @@ import { sleep } from '../../src/utils'
 describe('IndyDCPClient', function () {
   describe('#get_servo_state()', function () {
     it('should return binary string', async () => {
+      this.timeout(10000)
+
       var client = new IndyDCPClient('192.168.1.207', 'NRMK-Indy7')
       await client.connect()
 

@@ -2,36 +2,29 @@ import { expect } from 'chai'
 import { IndyDCPClient } from '../../src/dcp-client'
 import { sleep } from '../../src/utils'
 
+async function waitForState(client, checkFn) {
+  var robotStatus = await client.getRobotStatus()
+  while (!checkFn(robotStatus)) {
+    await sleep(1000)
+    robotStatus = await client.getRobotStatus()
+  }
+}
+
 describe('IndyDCPClient', function () {
   describe('#getRobotStatus()', function () {
+    this.timeout(20000)
+
     it('should return binary string', async () => {
       var client = new IndyDCPClient('192.168.1.207', 'NRMK-Indy7')
       await client.connect()
 
       await client.emergency_stop()
-      await client.getRobotStatus()
-
-      console.log(client.robotStatus)
-      // expect(client.robotStatus.is_emergency_stop).to.be.true
-      // expect(client.robotStatus.is_in_resetting).to.be.true
-      // expect(client.robotStatus.is_robot_ready).to.be.true
+      await waitForState(client, status => !status.is_robot_ready)
 
       await client.reset_robot()
-      await client.getRobotStatus()
 
-      console.log(client.robotStatus)
-      // expect(client.robotStatus.is_emergency_stop).to.be.true
-      // expect(client.robotStatus.is_in_resetting).to.be.true
-      // expect(client.robotStatus.is_robot_ready).to.be.true
-
-      await sleep(10000)
-
-      await client.getRobotStatus()
-
-      console.log(client.robotStatus)
-      // expect(client.robotStatus.is_emergency_stop).to.be.true
-      // expect(client.robotStatus.is_in_resetting).to.be.true
-      // expect(client.robotStatus.is_robot_ready).to.be.true
+      await waitForState(client, status => status.is_in_resetting)
+      await waitForState(client, status => status.is_robot_ready)
 
       client.disconnect()
     })
