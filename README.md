@@ -8,9 +8,9 @@ IndyDCP client module for nodejs.
 [things-factory]() is blah blah.
 we get powerful automation in js.
 
-[Provided by hatiolab](https://www.youtube.com/playlist?list=PLrcYC3lASr3spRCJIRYqfm3axhMMEoimP)
-[Operato Tutorials](https://www.youtube.com/playlist?list=PLrcYC3lASr3sXZNC6e-6J-dRoPB2-Efo-)
-[Things Board Tutorials](https://www.youtube.com/playlist?list=PLrcYC3lASr3sFvDlSaHRhTgIDSZ4c3KhO)
+- [Provided by hatiolab](https://www.youtube.com/playlist?list=PLrcYC3lASr3spRCJIRYqfm3axhMMEoimP)
+- [Operato Tutorials](https://www.youtube.com/playlist?list=PLrcYC3lASr3sXZNC6e-6J-dRoPB2-Efo-)
+- [Things Board Tutorials](https://www.youtube.com/playlist?list=PLrcYC3lASr3sFvDlSaHRhTgIDSZ4c3KhO)
 
 People are using @things-factory/node-indydcp to fry whole chickens with robots, make coffee or bubble tea, and sort apples and pears.
 If you're using it for something cool, I'd love to hear about it!
