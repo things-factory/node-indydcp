@@ -27,22 +27,6 @@ export class RobotStatus {
       robotStatus[prop] = status_str[StatusFlag[prop]] == '1'
     }
 
-    // robotStatus.is_robot_running = status_str[0] == '1'
-    // robotStatus.is_robot_ready = status_str[1] == '1'
-    // robotStatus.is_emergency_stop = status_str[2] == '1'
-    // robotStatus.is_collided = status_str[3] == '1'
-    // robotStatus.is_error_state = status_str[4] == '1'
-    // robotStatus.is_busy = status_str[5] == '1'
-    // robotStatus.is_move_finished = status_str[6] == '1'
-    // robotStatus.is_home = status_str[7] == '1'
-    // robotStatus.is_zero = status_str[8] == '1'
-    // robotStatus.is_in_resetting = status_str[9] == '1'
-    // robotStatus.is_direct_teaching_mode = status_str[24] == '1'
-    // robotStatus.is_teaching_mode = status_str[25] == '1'
-    // robotStatus.is_program_running = status_str[26] == '1'
-    // robotStatus.is_program_paused = status_str[27] == '1'
-    // robotStatus.is_conty_connected = status_str[28] == '1'
-
     return robotStatus
   }
 
