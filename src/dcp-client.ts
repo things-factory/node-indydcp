@@ -66,7 +66,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   disconnect() {
     this.socket && this.socket.destroy()
     this.socket = null
-    // this.__lock.release()
+    // this.__lock?.release()
   }
 
   shutdown() {
@@ -108,10 +108,6 @@ export class IndyDCPClient implements IIndyDCPClient {
 
     // Recv data from socket
     var resDataSize = resHeader.dataSize
-
-    // for (let prop in resHeader) {
-    //   console.log('resHeader', prop, resHeader[prop])
-    // }
 
     if (resDataSize > SIZE_DATA_TCP_MAX || resDataSize < 0) {
       console.log(`Response data size is invalid ${resDataSize} (max: {}): Disconnected`)
@@ -451,16 +447,23 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_LAST_EMG_INFO)
   get_last_emergency_info() {
     // Check (TODO: represent meaning of results)
-    // var { errorCode, resData, resDataSize } = await this.handleCommand(CommandCode.CMD_GET_LAST_EMG_INFO)
     return {
-      deserializer(value) {
-        // ret_code = c_int32()
-        // ret_int_arr = (c_int32 * 3)()
-        // ret_double_arr = (c_double*3)()
-        // memmove(addressof(ret_code), addressof(resData.byte), 4)
-        // memmove(addressof(ret_int_arr), addressof(resData.byte) + 4, 4 * 3)
-        // memmove(addressof(ret_double_arr), addressof(resData.byte) + 16, 8 * 3)
-        // return np.array(ret_code).tolist(), np.array(ret_int_arr).tolist(), np.array(ret_double_arr).tolist()
+      deserializer(buffer) {
+        return {
+          code: buffer.readInt32LE(0),
+          int_array: [
+            // 3 integers
+            buffer.readInt32LE(4 + 0 * 4),
+            buffer.readInt32LE(4 + 1 * 4),
+            buffer.readInt32LE(4 + 2 * 4)
+          ],
+          double_array: [
+            // 3 doubles
+            buffer.readDoubleLE(4 + 12 + 0 * 8),
+            buffer.readDoubleLE(4 + 12 + 1 * 8),
+            buffer.readDoubleLE(4 + 12 + 2 * 8)
+          ]
+        }
       }
     }
   }
@@ -472,7 +475,6 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_SMART_DIS, null, 'bools')
   get_smart_dis() {}
 
-  // TODO implement array type request
   @packet(CommandCode.CMD_SET_SMART_DO, ['int', 'bool'])
   set_smart_do(idx, val) {}
 
@@ -482,7 +484,6 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_SMART_AI, 'int', 'int')
   get_smart_ai(idx) {}
 
-  // TODO implement array type request
   @packet(CommandCode.CMD_SET_SMART_AO, ['int', 'int'])
   set_smart_ao(idx, val) {}
 
@@ -495,7 +496,6 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_SMART_AO, 'int', 'int')
   get_smart_ao(idx) {}
 
-  // TODO implement array type request
   @packet(CommandCode.CMD_SET_ENDTOOL_DO, ['int', 'bool'])
   set_endtool_do(endtool_type /* EndToolType */, val) {}
 
@@ -515,7 +515,6 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_CB_TRANS, null, 'double')
   get_cb_ft_sensor_process() {}
 
-  // TODO implement array type request, and 'buffer' type response
   @packet(CommandCode.CMD_READ_DIRECT_VARIABLE, ['int', 'int'], 'buffer')
   async read_direct_variable(dvType, dvAddr) {
     return {
@@ -547,53 +546,52 @@ export class IndyDCPClient implements IIndyDCPClient {
   read_direct_variables(dvType, dvAddr, dvLen) {
     return {
       deserializer(buffer: Buffer) {
+        var size = buffer.length
+        var array = []
+
         switch (dvType) {
           case DirectVariableType.BYTE: // B
-          // if resDataSize == 1*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         res.append(np.array(resData.byteArr)[dv_n])
-          //     return res
+            // ASSERT(size == dvLen * 1)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readInt8(i * 1))
+            }
+            return array
           case DirectVariableType.WORD: // W
-          // if resDataSize == 2*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         val = np.array(resData.wordArr)[dv_n].tolist()
-          //         res.append(int.from_bytes(val, byteorder='little', signed=true))
-          //     return res
+            // ASSERT(size == dvLen * 2)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readInt16LE(i * 2))
+            }
+            return array
           case DirectVariableType.DWORD: // I
-          // if resDataSize == 4*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         val = np.array(resData.dwordArr)[dv_n].tolist()
-          //         res.append(int.from_bytes(val, byteorder='little', signed=true))
-          //     return res
+            // ASSERT(size == dvLen * 4)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readInt32LE(i * 4))
+            }
+            return array
           case DirectVariableType.LWORD: // L
-          // if resDataSize == 8*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         val = np.array(resData.lwordArr)[dv_n].tolist()
-          //         res.append(int.from_bytes(val, byteorder='little', signed=true))
-          //     return res
+            // ASSERT(size == dvLen * 8)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readBigInt64LE(i * 8))
+            }
+            return array
           case DirectVariableType.FLOAT: // F
-          // if resDataSize == 4*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         res.append(np.array(resData.floatArr)[dv_n])
-          //     return res
+            // ASSERT(size == dvLen * 4)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readFloatLE(i * 4))
+            }
+            return array
           case DirectVariableType.DFLOAT: // D
-          // if resDataSize == 8*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         res.append(np.array(resData.doubleArr)[dv_n])
-          //     return res
+            // ASSERT(size == dvLen * 8)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readDoubleLE(i * 8))
+            }
+            return array
           case DirectVariableType.MODBUS_REG: // M
-          // if resDataSize == 2*dvLen:
-          //     res = []
-          //     for dv_n in range(0, dvLen):
-          //         val = np.array(resData.uwordArr)[dv_n].tolist()
-          //         res.append(int.from_bytes(val, byteorder='little', signed=false))
-          //     return res
+            // ASSERT(size == dvLen * 2)
+            for (let i = 0; i < dvLen; i++) {
+              array.push(buffer.readUInt16LE(i * 2))
+            }
+            return array
           default:
             console.log('None matched type')
             return false
@@ -606,41 +604,44 @@ export class IndyDCPClient implements IIndyDCPClient {
   write_direct_variable(dvType, dvAddr, val) {
     return {
       serializer() {
-        var reqDataSize = 8
-
-        var reqData = Buffer.alloc(reqDataSize)
-        reqData.writeInt32LE(dvType)
-        reqData.writeInt32LE(dvAddr)
-
+        var buffer
         switch (dvType) {
           case DirectVariableType.BYTE:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_uint8(val)), 1)
-          // reqDataSize += 1
-          // console.log(np.array(reqData.byte))
-          // console.log(reqDataSize)
+            buffer = Buffer.alloc(8 + 1)
+            buffer.writeInt8(val, 8)
+            break
           case DirectVariableType.WORD:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_int16(val)), 2)
-          // reqDataSize += 2
-          // console.log(np.array(reqData.byte))
-          // console.log(reqDataSize)
+            buffer = Buffer.alloc(8 + 2)
+            buffer.writeInt16LE(val, 8)
+            break
           case DirectVariableType.DWORD:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_int32(val)), 4)
-          // reqDataSize += 4
+            buffer = Buffer.alloc(8 + 4)
+            buffer.writeInt32LE(val, 8)
+            break
           case DirectVariableType.LWORD:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_int64(val)), 8)
-          // reqDataSize += 8
+            buffer = Buffer.alloc(8 + 8)
+            buffer.writeBigInt64LE(val, 8)
+            break
           case DirectVariableType.FLOAT:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_float(val)), 4)
-          // reqDataSize += 4
+            buffer = Buffer.alloc(8 + 4)
+            buffer.writeFloatLE(val, 8)
+            break
           case DirectVariableType.DFLOAT:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_double(val)), 8)
-          // reqDataSize += 8
+            buffer = Buffer.alloc(8 + 8)
+            buffer.writeDoubleLE(val, 8)
+            break
           case DirectVariableType.MODBUS_REG:
-          // memmove(addressof(reqData.byte) + 8, pointer(c_uint16(val)), 2)
-          // reqDataSize += 2
+            buffer = Buffer.alloc(8 + 2)
+            buffer.writeUInt16LE(val, 8)
+            break
           default:
-            console.log('None matched type')
+            throw new Error('None matched type')
         }
+
+        buffer.writeInt32LE(dvType, 0)
+        buffer.writeInt32LE(dvAddr, 4)
+
+        return buffer
       }
     }
   }
@@ -649,51 +650,46 @@ export class IndyDCPClient implements IIndyDCPClient {
   write_direct_variables(dvType, dvAddr, dvLen, val) {
     return {
       serializer() {
-        var reqDataSize = 12
-        var reqData = Buffer.alloc(reqDataSize)
-
-        reqData.writeInt32LE(dvType)
-        reqData.writeInt32LE(dvAddr)
-        reqData.writeInt32LE(dvLen)
+        var buffer
 
         switch (dvType) {
           case DirectVariableType.BYTE:
-          // for ii in range(0, dvLen):
-          //     memmove(addressof(reqData.byte) + 12 + 1*ii, pointer(c_uint8(val[ii])), 1)
-          //     reqDataSize += 1
+            buffer = Buffer.alloc(4 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeInt8LE(x, i * 1 + 12))
+            break
           case DirectVariableType.WORD:
-          // for ii in range(0, dvLen):
-          //     type_size = 2
-          //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_int16(val[ii])), type_size)
-          //     reqDataSize += type_size
+            buffer = Buffer.alloc(2 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeInt16LE(x, i * 2 + 12))
+            break
           case DirectVariableType.DWORD:
-          // for ii in range(0, dvLen):
-          //     type_size = 4
-          //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_int32(val[ii])), type_size)
-          //     reqDataSize += type_size
+            buffer = Buffer.alloc(4 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeInt32LE(x, i * 4 + 12))
+            break
           case DirectVariableType.LWORD:
-          // for ii in range(0, dvLen):
-          //     type_size = 8
-          //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_int64(val[ii])), type_size)
-          //     reqDataSize += type_size
+            buffer = Buffer.alloc(8 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeBigInt64LE(x, i * 8 + 12))
+            break
           case DirectVariableType.FLOAT:
-          // for ii in range(0, dvLen):
-          //     type_size = 4
-          //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_float(val[ii])), type_size)
-          //     reqDataSize += type_size
+            buffer = Buffer.alloc(4 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeFloatLE(x, i * 4 + 12))
+            break
           case DirectVariableType.DFLOAT:
-          // for ii in range(0, dvLen):
-          //     type_size = 8
-          //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_double(val[ii])), type_size)
-          //     reqDataSize += type_size
+            buffer = Buffer.alloc(8 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeDoubleLE(x, i * 8 + 12))
+            break
           case DirectVariableType.MODBUS_REG:
-          // for ii in range(0, dvLen):
-          //     type_size = 2
-          //     memmove(addressof(reqData.byte) + 12 + type_size*ii, pointer(c_uint16(val[ii])), type_size)
-          //     reqDataSize += type_size
+            buffer = Buffer.alloc(2 * dvLen + 12)
+            val.forEach((x, i) => buffer.writeUInt32LE(x, i * 2 + 12))
+            break
           default:
-            console.log('None matched type')
+            throw new Error('None matched type')
         }
+
+        buffer.writeInt32LE(dvType)
+        buffer.writeInt32LE(dvAddr)
+        buffer.writeInt32LE(dvLen)
+
+        return buffer
       }
     }
   }
@@ -717,12 +713,15 @@ export class IndyDCPClient implements IIndyDCPClient {
   move_ext_traj_bin(trajType, trajFreq, datSize, trajData, datNum = 3) {
     return {
       serializer() {
-        // var dat_len = trajData.length
-        // var opt_data = [trajType, trajFreq, datNum, datSize, Math.floor(dat_len / (datSize * datNum))]
-        //     ext_data1 = np.array(opt_data).tobytes()
-        //     ext_data2 = np.array(trajData).tobytes()
-        //     reqExtData = ext_data1 + ext_data2
-        //     reqExtDataSize = len(reqExtData)
+        var buffer = Buffer.alloc(4 + 4 + 4 + 4 + 4)
+
+        buffer.writeInt32LE(trajType, 0)
+        buffer.writeInt32LE(trajFreq, 4)
+        buffer.writeInt32LE(datNum, 8)
+        buffer.writeInt32LE(datSize, 12)
+        buffer.writeInt32LE(Math.floor(trajData.length / (datSize * datNum)), 16)
+
+        return Buffer.concat([buffer, Buffer.from(trajData)])
       }
     }
   }
@@ -731,19 +730,17 @@ export class IndyDCPClient implements IIndyDCPClient {
   move_ext_traj_txt(trajType, trajFreq, datSize, trajData, datNum = 3) {
     return {
       serializer() {
-        //     opt_len = 5
-        //     dat_len = len(trajData)
-        //     ext_dataSize = opt_len + dat_len
-        //     ext_data = [None] * ext_dataSize
-        //     ext_data[0] = trajType
-        //     ext_data[1] = trajFreq
-        //     ext_data[2] = datNum
-        //     ext_data[3] = datSize
-        //     ext_data[4] = Math.floor(dat_len/(datSize*datNum))  # traj_len
-        //     ext_data[5:-1] = trajData
-        //     ext_data_str = ' '.join(str(e) for e in ext_data)
-        //     reqExtData = ext_data_str.encode('ascii')
-        //     reqExtDataSize = len(ext_data_str)
+        var data = [
+          trajType,
+          trajFreq,
+          datNum,
+          datSize,
+          Math.floor(trajData.len / (datSize * datNum)),
+          trajData.toString()
+        ]
+          .map(d => String(d))
+          .join(' ')
+        return Buffer.from(data)
       }
     }
   }
@@ -752,9 +749,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   move_ext_traj_bin_file(filename) {
     return {
       serializer() {
-        //     filename += "\0"  # last char should be null
-        //     reqExtData = filename.encode('ascii')
-        //     reqExtDataSize = len(filename)
+        return Buffer.from(filename + '\0')
       }
     }
   }
@@ -763,9 +758,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   move_ext_traj_txt_file(filename) {
     return {
       serializer() {
-        //     filename += "\0"  # last char should be null
-        //     reqExtData = filename.encode('ascii')
-        //     reqExtDataSize = len(filename)
+        return Buffer.from(filename + '\0')
       }
     }
   }
@@ -781,9 +774,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   set_and_start_json_program(jsonString) {
     return {
       serializer() {
-        //     jsonString += "\0"
-        //     reqExtData = jsonString.encode('ascii')
-        //     reqExtDataSize = len(jsonString)
+        return Buffer.from(jsonString + '\0')
       }
     }
   }
