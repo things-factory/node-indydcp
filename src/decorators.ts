@@ -1,4 +1,4 @@
-import { DTYPES, DTRANSFORM } from './packet'
+import { getSerializer, getDeserializer } from './packet'
 
 export const mutex = (target: Object, property: string, descriptor: TypedPropertyDescriptor<any>): any => {
   const method = descriptor.value
@@ -29,12 +29,12 @@ export const packet = (command, reqDataType?, resDataType?) => (
 
   descriptor.value = async function (...args) {
     var { serializer, deserializer } = (await method.apply(this, args)) || {}
-    var data = args[0]
+    // var data = args[0]
     var reqData
 
-    serializer = serializer || (reqDataType && DTRANSFORM[reqDataType].serializer)
+    serializer = serializer || (reqDataType && getSerializer(reqDataType))
     if (serializer) {
-      reqData = serializer(data)
+      reqData = serializer.apply(null, args)
     }
 
     var { errorCode, resData, resDataSize } = await this.handleCommand(command, reqData)
@@ -44,7 +44,7 @@ export const packet = (command, reqDataType?, resDataType?) => (
 
     var result = resData
     if (resDataType) {
-      result = DTRANSFORM[resDataType].deserializer(result)
+      result = getDeserializer(resDataType)(result)
     }
     if (deserializer) {
       result = deserializer(result)
@@ -71,12 +71,11 @@ export const extpacket = (command, reqDataType?, resDataType?) => (
 
   descriptor.value = async function (...args) {
     var { serializer, deserializer } = (await method.apply(this, args)) || {}
-    var data = args[0]
     var reqData
 
-    serializer = serializer || (reqDataType && DTRANSFORM[reqDataType].serializer)
+    serializer = serializer || (reqDataType && getSerializer(reqDataType))
     if (serializer) {
-      reqData = serializer(data)
+      reqData = serializer.apply(null, args)
     }
 
     var { errorCode, resData, resDataSize } = await this.handleExtendedCommand(command, reqData)
@@ -86,7 +85,7 @@ export const extpacket = (command, reqDataType?, resDataType?) => (
 
     var result = resData
     if (resDataType) {
-      result = DTRANSFORM[resDataType].deserializer(result)
+      result = getDeserializer(resDataType)(result)
     }
     if (deserializer) {
       result = deserializer(result)

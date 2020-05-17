@@ -95,7 +95,7 @@ export function parseResPacket(buffer) {
 }
 
 // data type
-export const DTYPES = {
+export const DTYPESIZES = {
   char: 1,
   bool: 1,
   int: 4,
@@ -209,6 +209,48 @@ export const DTRANSFORM = {
       }
       return array
     }
+  },
+  buffer: {
+    serializer(buffer) {
+      return buffer || Buffer.alloc(0)
+    },
+    deserializer(buffer) {
+      return buffer || Buffer.alloc(0)
+    }
+  }
+}
+
+export function getSerializer(type) {
+  if (type instanceof Array) {
+    return function (...args) {
+      var serializers = type.map(t => getSerializer(t))
+      var result = Buffer.concat(serializers.map((serializer, i) => serializer.apply(null, [args[i]])))
+      console.log('array packet', args, result)
+      return result
+    }
+  } else {
+    var transformer = DTRANSFORM[type] || DTRANSFORM['buffer']
+    return transformer.serializer
+  }
+}
+
+export function getDeserializer(type) {
+  if (type instanceof Array) {
+    return function (buffer) {
+      /* 주의 : deserializer는 array에 복수형 타입을 지원하지 않음 - 길이를 알 수 없기 때문. */
+      var deserializers = type.map(t => getDeserializer(t))
+      var offset = 0
+      return deserializers.map((deserializer, i) => {
+        var size = DTYPESIZES[type[i]]
+        var value = deserializer.call(null, buffer.slice(offset, size))
+        offset += size
+
+        return value
+      })
+    }
+  } else {
+    var transformer = DTRANSFORM[type] || DTRANSFORM['buffer']
+    return transformer.deserializer
   }
 }
 

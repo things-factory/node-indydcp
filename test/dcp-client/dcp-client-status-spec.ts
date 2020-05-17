@@ -26,6 +26,8 @@ describe('IndyDCPClient', function () {
       await waitForState(client, status => status.is_in_resetting)
       await waitForState(client, status => status.is_robot_ready)
 
+      console.log(client.robotStatus)
+
       client.disconnect()
     })
   })

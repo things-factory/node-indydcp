@@ -15,6 +15,20 @@ export enum DirectVariableType {
   MODBUS_REG = 10
 }
 
+/* End Tool Type */
+export enum EndToolType {
+  NPN,
+  PNP,
+  NoUse,
+  eModi
+}
+
+/* Task Base Mode */
+export enum TaskBaseMode {
+  REFERENCE_BODY,
+  END_EFFECT_TOOL_TIP
+}
+
 /* Indy Client Interface */
 export interface IIndyDCPClient {
   JOINT_DOF

@@ -13,6 +13,14 @@ describe('IndyDCPClient', function () {
       var dis = await client.get_smart_dis()
       console.log('Digital Inputs: ', dis)
 
+      await client.set_smart_do(1, true)
+      await client.set_smart_do(5, true)
+      var dos = await client.get_smart_dos()
+      console.log('Digital Outputs: ', dos)
+
+      expect(dos[1]).to.be.true
+      expect(dos[5]).to.be.true
+
       client.disconnect()
     })
   })
