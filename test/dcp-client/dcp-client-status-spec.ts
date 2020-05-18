@@ -12,7 +12,7 @@ async function waitForState(client, checkFn) {
 }
 
 describe('IndyDCPClient', function () {
-  describe('#getRobotStatus()', function () {
+  describe('#emergencyStop()', function () {
     this.timeout(20000)
 
     it('should return binary string', async () => {

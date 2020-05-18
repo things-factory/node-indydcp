@@ -15,7 +15,7 @@ describe('IndyDCPClient', function () {
       console.log('Joint Positions: ', jointPositions)
 
       var taskPositions = await client.getTaskPos()
-      console.log('Task Position: ', taskPositions)
+      console.log('Task Positions: ', taskPositions)
 
       var jointVelocities = await client.getJointVel()
       var taskVelocities = await client.getTaskVel()

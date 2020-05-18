@@ -3,7 +3,7 @@ import { ROBOT_IP, ROBOT_NAME } from '../settings'
 import { IndyDCPClient } from '../../src/dcp-client'
 
 describe('IndyDCPClient', function () {
-  describe('#getSmartDIs()', function () {
+  describe('#getSmartAI()', function () {
     this.timeout(10000)
 
     it('should return binary string', async () => {
