@@ -33,17 +33,17 @@ export class IndyDCPClient implements IIndyDCPClient {
   public sofClient
   public stepInfo
 
-  private __server_port
-  private __lock
+  private _serverPort
+  private _lock
 
   constructor(serverIp, robotName, robotVersion = '') {
-    this.__server_port = 6066
+    this._serverPort = 6066
     this.sofServer = 0x12
     this.sofClient = 0x34
     this.stepInfo = 0x02
-    this.__lock = new AwaitLock()
+    this._lock = new AwaitLock()
 
-    this.lock = this.__lock
+    this.lock = this._lock
     this.socket
     this.timeout = 10
     this.invokeId = 0
@@ -58,7 +58,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     this.socket = new PromiseSocket(new Socket())
     // this.socket.setEncoding('utf8')
 
-    await this.socket.connect(this.__server_port, this.serverIp)
+    await this.socket.connect(this._serverPort, this.serverIp)
 
     console.log(`Connect: Server IP (${this.serverIp})`)
   }
@@ -66,7 +66,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   disconnect() {
     this.socket && this.socket.destroy()
     this.socket = null
-    // this.__lock?.release()
+    // this._lock?.release()
   }
 
   shutdown() {
@@ -117,7 +117,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
 
     this.robotStatus = RobotStatus.from(resHeader.status)
-    var errorCode = checkHeader(reqHeader, resHeader, this.robotStatus.is_error_state && resData?.readInt32LE(0))
+    var errorCode = checkHeader(reqHeader, resHeader, this.robotStatus.is_errorState && resData?.readInt32LE(0))
 
     return {
       errorCode,
@@ -157,7 +157,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
 
     this.robotStatus = RobotStatus.from(resHeader.status)
-    var errorCode = checkHeader(reqHeader, resHeader, this.robotStatus.is_error_state && resData?.readInt32LE(0))
+    var errorCode = checkHeader(reqHeader, resHeader, this.robotStatus.is_errorState && resData?.readInt32LE(0))
 
     return {
       errorCode,
@@ -177,248 +177,248 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @packet(CommandCode.CMD_EMERGENCY_STOP)
-  emergency_stop() {}
+  emergencyStop() {}
 
   @packet(CommandCode.CMD_RESET_ROBOT)
-  reset_robot() {}
+  resetRobot() {}
 
   @packet(CommandCode.CMD_SET_SERVO, 'bools' /* this.JOINT_DOF * 1 */)
-  set_servo(arr) {}
+  setServo(arr) {}
 
   @packet(CommandCode.CMD_SET_BRAKE, 'bools' /* this.JOINT_DOF * 1 */)
-  set_brake(arr) {}
+  setBrake(arr) {}
 
   @packet(CommandCode.CMD_STOP)
-  stop_motion() {}
+  stopMotion() {}
 
   @packet(CommandCode.CMD_MOVE, 'string')
-  execute_move(command_name) {}
+  executeMove(command_name) {}
 
   // Move commands
   @packet(CommandCode.CMD_MOVE_HOME)
-  go_home() {}
+  goHome() {}
 
   @packet(CommandCode.CMD_MOVE_ZERO)
-  go_zero() {}
+  goZero() {}
 
   @packet(CommandCode.CMD_JOINT_MOVE_TO, 'doubles' /* 7 * 8 */)
-  _7dof_joint_move_to(q) {}
+  _7dofJointMoveTo(q) {}
 
   @packet(CommandCode.CMD_JOINT_MOVE_TO, 'doubles' /* 6 * 8 */)
-  _6dof_joint_move_to(q) {}
+  _6dofJointMoveTo(q) {}
 
-  joint_move_to(q) {
+  jointMoveTo(q) {
     if (this.JOINT_DOF == 7) {
-      this._7dof_joint_move_to(q)
+      this._7dofJointMoveTo(q)
     } else {
-      this._6dof_joint_move_to(q)
+      this._6dofJointMoveTo(q)
     }
   }
 
   @packet(CommandCode.CMD_JOINT_MOVE_BY, 'doubles' /* 7 * 8 */)
-  _7dof_joint_move_by(q) {}
+  _7dofJointMoveBy(q) {}
 
   @packet(CommandCode.CMD_JOINT_MOVE_BY, 'doubles' /* 6 * 8 */)
-  _6dof_joint_move_by(q) {}
+  _6dofJointMoveBy(q) {}
 
-  joint_move_by(q) {
+  jointMoveBy(q) {
     if (this.JOINT_DOF == 7) {
-      this._7dof_joint_move_by(q)
+      this._7dofJointMoveBy(q)
     } else {
-      this._6dof_joint_move_by(q)
+      this._6dofJointMoveBy(q)
     }
   }
 
   @packet(CommandCode.CMD_TASK_MOVE_TO, 'doubles' /* 6 * 8 */)
-  task_move_to(p) {}
+  taskMoveTo(p) {}
 
   @packet(CommandCode.CMD_TASK_MOVE_BY, 'doubles' /* 6 * 8 */)
-  task_move_by(p) {}
+  taskMoveBy(p) {}
 
   // Program control
   @packet(CommandCode.CMD_START_CURRENT_PROGRAM)
-  start_current_program() {}
+  startCurrentProgram() {}
 
   @packet(CommandCode.CMD_PAUSE_CURRENT_PROGRAM)
-  pause_current_program() {}
+  pauseCurrentProgram() {}
 
   @packet(CommandCode.CMD_RESUME_CURRENT_PROGRAM)
-  resume_current_program() {}
+  resumeCurrentProgram() {}
 
   @packet(CommandCode.CMD_STOP_CURRENT_PROGRAM)
-  stop_current_program() {}
+  stopCurrentProgram() {}
 
   @packet(CommandCode.CMD_START_DEFAULT_PROGRAM)
-  start_default_program() {}
+  startDefaultProgram() {}
 
   @packet(CommandCode.CMD_REGISTER_DEFAULT_PROGRAM_IDX, 'int')
-  set_default_program(idx) {}
+  setDefaultProgram(idx) {}
 
   @packet(CommandCode.CMD_GET_REGISTERED_DEFAULT_PROGRAM_IDX, null, 'int')
-  get_default_program_idx() {}
+  getDefaultProgramIdx() {}
 
   // Get robot status
   @packet(CommandCode.CMD_IS_ROBOT_RUNNING, null, 'bool')
-  is_robot_running() {}
+  isRobotRunning() {}
 
   @packet(CommandCode.CMD_IS_READY, null, 'bool')
-  is_robot_ready() {}
+  isRobotReady() {}
 
   @packet(CommandCode.CMD_IS_EMG, null, 'bool')
-  is_emergency_stop() {}
+  isEmergencyStop() {}
 
   @packet(CommandCode.CMD_IS_COLLIDED, null, 'bool')
-  is_collided() {}
+  isCollided() {}
 
   @packet(CommandCode.CMD_IS_ERR, null, 'bool')
-  is_error_state() {}
+  isErrorState() {}
 
   @packet(CommandCode.CMD_IS_BUSY, null, 'bool')
-  is_busy() {}
+  isBusy() {}
 
   @packet(CommandCode.CMD_IS_MOVE_FINISEHD, null, 'bool')
-  is_move_finished() {}
+  isMoveFinished() {}
 
   @packet(CommandCode.CMD_IS_HOME, null, 'bool')
-  is_home() {}
+  isHome() {}
 
   @packet(CommandCode.CMD_IS_ZERO, null, 'bool')
-  is_zero() {}
+  isZero() {}
 
   @packet(CommandCode.CMD_IS_IN_RESETTING, null, 'bool')
-  is_in_resetting() {}
+  isInResetting() {}
 
   @packet(CommandCode.CMD_IS_DIRECT_TECAHING, null, 'bool')
-  is_direct_teaching_mode() {}
+  isDirectTeachingMode() {}
 
   @packet(CommandCode.CMD_IS_TEACHING, null, 'bool')
-  is_teaching_mode() {}
+  isTeachingMode() {}
 
   @packet(CommandCode.CMD_IS_PROGRAM_RUNNING, null, 'bool')
-  is_program_running() {}
+  isProgramRunning() {}
 
   @packet(CommandCode.CMD_IS_PROGRAM_PAUSED, null, 'bool')
-  is_program_paused() {}
+  isProgramPaused() {}
 
   @packet(CommandCode.CMD_IS_CONTY_CONNECTED, null, 'bool')
-  is_conty_connected() {}
+  isContyConnected() {}
 
   // Direct teaching
   @packet(CommandCode.CMD_CHANGE_DIRECT_TEACHING)
-  change_to_direct_teaching() {}
+  changeToDirectTeaching() {}
 
   @packet(CommandCode.CMD_FINISH_DIRECT_TEACHING)
-  finish_direct_teaching() {}
+  finishDirectTeaching() {}
 
   // Simple waypoint program, joint and task.
   @packet(CommandCode.CMD_JOINT_PUSH_BACK_WAYPOINT_SET, 'doubles' /* 6 * 8 */)
-  push_back_joint_waypoint(q) {}
+  pushBackJointWaypoint(q) {}
 
   @packet(CommandCode.CMD_JOINT_POP_BACK_WAYPOINT_SET)
-  pop_back_joint_waypoint() {}
+  popBackJointWaypoint() {}
 
   @packet(CommandCode.CMD_JOINT_CLEAR_WAYPOINT_SET)
-  clear_joint_waypoints() {}
+  clearJointWaypoints() {}
 
   @packet(CommandCode.CMD_JOINT_EXECUTE_WAYPOINT_SET)
-  execute_joint_waypoints() {}
+  executeJointWaypoints() {}
 
   @packet(CommandCode.CMD_TASK_PUSH_BACK_WAYPOINT_SET, 'doubles' /* 6 * 8 */)
-  push_back_task_waypoint(p) {}
+  pushBackTaskWaypoint(p) {}
 
   @packet(CommandCode.CMD_TASK_POP_BACK_WAYPOINT_SET)
-  pop_back_task_waypoint() {}
+  popBackTaskWaypoint() {}
 
   @packet(CommandCode.CMD_TASK_CLEAR_WAYPOINT_SET)
-  clear_task_waypoints() {}
+  clearTaskWaypoints() {}
 
   @packet(CommandCode.CMD_TASK_EXECUTE_WAYPOINT_SET)
-  execute_task_waypoints() {}
+  executeTaskWaypoints() {}
 
   // Get/Set some global robot variables
   @packet(CommandCode.CMD_SET_DEFAULT_TCP, 'doubles' /* 6 * 8 */)
-  set_default_tcp(tcp) {}
+  setDefaultTcp(tcp) {}
 
   @packet(CommandCode.CMD_RESET_DEFAULT_TCP)
-  reset_default_tcp() {}
+  resetDefaultTcp() {}
 
   @packet(CommandCode.CMD_SET_COMP_TCP, 'doubles' /* 6 * 8 */)
-  set_tcp_compensation(tcp) {}
+  setTcpCompensation(tcp) {}
 
   @packet(CommandCode.CMD_RESET_COMP_TCP)
-  reset_tcp_compensation() {}
+  resetTcpCompensation() {}
 
   @packet(CommandCode.CMD_SET_REFFRAME, 'doubles' /* 6 * 8 */)
-  set_ref_frame(ref) {}
+  setRefFrame(ref) {}
 
   @packet(CommandCode.CMD_RESET_REFFRAME)
-  reset_ref_frame() {}
+  resetRefFrame() {}
 
   @packet(CommandCode.CMD_SET_COLLISION_LEVEL, 'int')
-  set_collision_level(level) {}
+  setCollisionLevel(level) {}
 
   @packet(CommandCode.CMD_SET_JOINT_BOUNDARY, 'int')
-  set_joint_speed_level(level) {}
+  setJointSpeedLevel(level) {}
 
   @packet(CommandCode.CMD_SET_TASK_BOUNDARY, 'int')
-  set_task_speed_level(level) {}
+  setTaskSpeedLevel(level) {}
 
   @packet(CommandCode.CMD_SET_JOINT_WTIME, 'double')
-  set_joint_waypoint_time(time) {}
+  setJointWaypointTime(time) {}
 
   @packet(CommandCode.CMD_SET_TASK_WTIME, 'double')
-  set_task_waypoint_time(time) {}
+  setTaskWaypointTime(time) {}
 
   @packet(CommandCode.CMD_SET_TASK_CMODE, 'int')
-  set_task_base_mode(mode /* TaskBaseMode */) {}
+  setTaskBaseMode(mode /* TaskBaseMode */) {}
 
   @packet(CommandCode.CMD_SET_JOINT_BLEND_RADIUS, 'double')
-  set_joint_blend_radius(radius) {}
+  setJointBlendRadius(radius) {}
 
   @packet(CommandCode.CMD_SET_TASK_BLEND_RADIUS, 'double')
-  set_task_blend_radius(radius) {}
+  setTaskBlendRadius(radius) {}
 
   @packet(CommandCode.CMD_GET_DEFAULT_TCP, null, 'double')
-  get_default_tcp() {}
+  getDefaultTcp() {}
 
   @packet(CommandCode.CMD_GET_COMP_TCP, null, 'double')
-  get_tcp_compensation() {}
+  getTcpCompensation() {}
 
   @packet(CommandCode.CMD_GET_REFFRAME, null, 'double')
-  get_ref_frame() {}
+  getRefFrame() {}
 
   @packet(CommandCode.CMD_GET_COLLISION_LEVEL, null, 'int')
-  get_collision_level() {}
+  getCollisionLevel() {}
 
   @packet(CommandCode.CMD_GET_JOINT_BOUNDARY, null, 'int')
-  get_joint_speed_level() {}
+  getJointSpeedLevel() {}
 
   @packet(CommandCode.CMD_GET_TASK_BOUNDARY, null, 'int')
-  get_task_speed_level() {}
+  getTaskSpeedLevel() {}
 
   @packet(CommandCode.CMD_GET_JOINT_WTIME, null, 'double')
-  get_joint_waypoint_time() {}
+  getJointWaypointTime() {}
 
   @packet(CommandCode.CMD_GET_TASK_WTIME, null, 'double')
-  get_task_waypoint_time() {}
+  getTaskWaypointTime() {}
 
   @packet(CommandCode.CMD_GET_TASK_CMODE, null, 'int')
-  get_task_base_mode() {}
+  getTaskBaseMode() {}
 
   @packet(CommandCode.CMD_GET_JOINT_BLEND_RADIUS, null, 'double')
-  get_joint_blend_radius() {}
+  getJointBlendRadius() {}
 
   @packet(CommandCode.CMD_GET_TASK_BLEND_RADIUS, null, 'double')
-  get_task_blend_radius() {}
+  getTaskBlendRadius() {}
 
   @packet(CommandCode.CMD_GET_RUNNING_TIME, null, 'double')
-  get_robot_running_time() {}
+  getRobotRunningTime() {}
 
   @packet(CommandCode.CMD_GET_CMODE, null, 'int')
-  get_cmode() {}
+  getCmode() {}
 
   @packet(CommandCode.CMD_GET_JOINT_STATE, null, 'bools')
-  get_servo_state() {
+  getServoState() {
     return {
       deserializer: value => {
         return {
@@ -430,22 +430,22 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @packet(CommandCode.CMD_GET_JOINT_POSITION, null, 'doubles')
-  get_joint_pos() {}
+  getJointPos() {}
 
   @packet(CommandCode.CMD_GET_JOINT_VELOCITY, null, 'doubles')
-  get_joint_vel() {}
+  getJointVel() {}
 
   @packet(CommandCode.CMD_GET_TASK_POSITION, null, 'doubles')
-  get_task_pos() {}
+  getTaskPos() {}
 
   @packet(CommandCode.CMD_GET_TASK_VELOCITY, null, 'doubles')
-  get_task_vel() {}
+  getTaskVel() {}
 
   @packet(CommandCode.CMD_GET_TORQUE, null, 'doubles')
-  get_torque() {}
+  getTorque() {}
 
   @packet(CommandCode.CMD_GET_LAST_EMG_INFO)
-  get_last_emergency_info() {
+  getLastEmergencyInfo() {
     // Check (TODO: represent meaning of results)
     return {
       deserializer(buffer) {
@@ -470,53 +470,53 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   // I/O
   @packet(CommandCode.CMD_GET_SMART_DI, 'int', 'char')
-  get_smart_di(idx) {}
+  getSmartDI(idx) {}
 
   @packet(CommandCode.CMD_GET_SMART_DIS, null, 'bools')
-  get_smart_dis() {}
+  getSmartDIs() {}
 
   @packet(CommandCode.CMD_SET_SMART_DO, ['int', 'bool'])
-  set_smart_do(idx, val) {}
+  setSmartDO(idx, val) {}
 
   @packet(CommandCode.CMD_SET_SMART_DOS, 'bools' /* 32 */)
-  set_smart_dos(idx) {}
+  setSmartDOs(idx) {}
 
   @packet(CommandCode.CMD_GET_SMART_AI, 'int', 'int')
-  get_smart_ai(idx) {}
+  getSmartAI(idx) {}
 
   @packet(CommandCode.CMD_SET_SMART_AO, ['int', 'int'])
-  set_smart_ao(idx, val) {}
+  setSmartAO(idx, val) {}
 
   @packet(CommandCode.CMD_GET_SMART_DO, 'int', 'bool')
-  get_smart_do(idx) {}
+  getSmartDO(idx) {}
 
   @packet(CommandCode.CMD_GET_SMART_DOS, null, 'bools')
-  get_smart_dos() {}
+  getSmartDOs() {}
 
   @packet(CommandCode.CMD_GET_SMART_AO, 'int', 'int')
-  get_smart_ao(idx) {}
+  getSmartAO(idx) {}
 
   @packet(CommandCode.CMD_SET_ENDTOOL_DO, ['int', 'bool'])
-  set_endtool_do(endtool_type /* EndToolType */, val) {}
+  setEndtoolDO(endtool_type /* EndToolType */, val) {}
 
   @packet(CommandCode.CMD_GET_ENDTOOL_DO, 'int', 'bool')
-  get_endtool_do(type /* EndToolType */) {}
+  getEndtoolDO(type /* EndToolType */) {}
 
   // FT sensor implementation
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_RAW, null, 'int')
-  get_robot_ft_sensor_raw() {}
+  getRobotFtSensorRaw() {}
 
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_TRANS, null, 'double')
-  get_robot_ft_sensor_process() {}
+  getRobotFtSensorProcess() {}
 
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_CB_RAW, null, 'int')
-  get_cb_ft_sensor_raw() {}
+  getCbFtSensorRaw() {}
 
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_CB_TRANS, null, 'double')
-  get_cb_ft_sensor_process() {}
+  getCbFtSensorProcess() {}
 
   @packet(CommandCode.CMD_READ_DIRECT_VARIABLE, ['int', 'int'], 'buffer')
-  async read_direct_variable(dvType, dvAddr) {
+  async readDirectVariable(dvType, dvAddr) {
     return {
       deserializer(buffer: Buffer) {
         switch (dvType) {
@@ -543,7 +543,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @packet(CommandCode.CMD_READ_DIRECT_VARIABLES, ['int', 'int', 'int'], 'buffer')
-  read_direct_variables(dvType, dvAddr, dvLen) {
+  readDirectVariables(dvType, dvAddr, dvLen) {
     return {
       deserializer(buffer: Buffer) {
         var size = buffer.length
@@ -601,7 +601,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @packet(CommandCode.CMD_WRITE_DIRECT_VARIABLE)
-  write_direct_variable(dvType, dvAddr, val) {
+  writeDirectVariable(dvType, dvAddr, val) {
     return {
       serializer() {
         var buffer
@@ -647,7 +647,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @packet(CommandCode.CMD_WRITE_DIRECT_VARIABLES)
-  write_direct_variables(dvType, dvAddr, dvLen, val) {
+  writeDirectVariables(dvType, dvAddr, dvLen, val) {
     return {
       serializer() {
         var buffer
@@ -696,21 +696,21 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   // Not released
   @packet(CommandCode.CMD_SET_REDUCED_MODE, 'bool')
-  set_reduced_mode(mode) {}
+  setReducedMode(mode) {}
 
   @packet(CommandCode.CMD_SET_REDUCED_SPEED_RATIO, 'double')
-  set_reduced_speed_ratio(ratio) {}
+  setReducedSpeedRatio(ratio) {}
 
   @packet(CommandCode.CMD_GET_REDUCED_MODE, null, 'bool')
-  get_reduced_mode() {}
+  getReducedMode() {}
 
   @packet(CommandCode.CMD_GET_REDUCED_SPEED_RATIO, null, 'double')
-  get_reduced_speed_ratio() {}
+  getReducedSpeedRatio() {}
 
   /* Extended IndyDCP command (Check all) */
 
   @extpacket(CommandCode.EXT_CMD_MOVE_TRAJ_BY_DATA)
-  move_ext_traj_bin(trajType, trajFreq, datSize, trajData, datNum = 3) {
+  moveExtTrajBin(trajType, trajFreq, datSize, trajData, datNum = 3) {
     return {
       serializer() {
         var buffer = Buffer.alloc(4 + 4 + 4 + 4 + 4)
@@ -727,7 +727,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @extpacket(CommandCode.EXT_CMD_MOVE_TRAJ_BY_TXT_DATA)
-  move_ext_traj_txt(trajType, trajFreq, datSize, trajData, datNum = 3) {
+  moveExtTrajTxt(trajType, trajFreq, datSize, trajData, datNum = 3) {
     return {
       serializer() {
         var data = [
@@ -746,7 +746,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @extpacket(CommandCode.EXT_CMD_MOVE_TRAJ_BY_FILE)
-  move_ext_traj_bin_file(filename) {
+  moveExtTrajBinFile(filename) {
     return {
       serializer() {
         return Buffer.from(filename + '\0')
@@ -755,7 +755,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   @extpacket(CommandCode.EXT_CMD_MOVE_TRAJ_BY_TXT_FILE)
-  move_ext_traj_txt_file(filename) {
+  moveExtTrajTxtFile(filename) {
     return {
       serializer() {
         return Buffer.from(filename + '\0')
@@ -763,15 +763,15 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  joint_move_to_wp_set() {}
+  jointMoveToWpSet() {}
 
-  task_move_to_wp_set() {}
+  taskMoveToWpSet() {}
 
   /* JSON programming added (only for internal engineer) */
-  set_json_program() {}
+  setJsonProgram() {}
 
   @extpacket(CommandCode.EXT_CMD_SET_JSON_PROG_START, 'string')
-  set_and_start_json_program(jsonString) {
+  setAndStartJsonProgram(jsonString) {
     return {
       serializer() {
         return Buffer.from(jsonString + '\0')
@@ -779,14 +779,14 @@ export class IndyDCPClient implements IIndyDCPClient {
     }
   }
 
-  wait_for_program_finish() {
-    //     while this.is_program_running():
+  waitForProgramFinish() {
+    //     while this.isProgramRunning():
     //         pass
     //     console.log('Program Finished: ', GLOBAL_DICT['stop'])
     //     return GLOBAL_DICT['stop']
   }
 
-  set_workspace(commandPos) {
+  setWorkspace(commandPos) {
     //     if np.all(commandPos != 0):
     //         return true
     //     else:
@@ -794,15 +794,15 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   /* Teaching points */
-  load_teaching_data(filename) {
+  loadTeachingData(filename) {
     //     with open(filename, "r") as jsonFile:
     //         teachConfig = json.load(jsonFile)
     //         return teachConfig
   }
 
-  update_teaching_data(filename, wpName, j_pos) {
+  updateTeachingData(filename, wpName, jPos) {
     //     newPos = []
-    //     for pos in j_pos:
+    //     for pos in jPos:
     //         newPos.append(float(pos))
     //     teach_data = {wpName: newPos}
     //     # If not an exist file
@@ -819,7 +819,7 @@ export class IndyDCPClient implements IIndyDCPClient {
     //         return teachConfig
   }
 
-  del_teaching_data(filename, wpName) {
+  delTeachingData(filename, wpName) {
     //     with open(filename) as jsonFile:
     //         teachConfig = json.load(jsonFile)
     //         del teachConfig[wpName]

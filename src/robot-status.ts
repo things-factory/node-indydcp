@@ -1,21 +1,21 @@
 import { bin } from './utils'
 
 enum StatusFlag {
-  is_robot_running = 0,
-  is_robot_ready = 1,
-  is_emergency_stop = 2,
-  is_collided = 3,
-  is_error_state = 4,
-  is_busy = 5,
-  is_move_finished = 6,
-  is_home = 7,
-  is_zero = 8,
-  is_in_resetting = 9,
-  is_direct_teaching_mode = 24,
-  is_teaching_mode = 25,
-  is_program_running = 26,
-  is_program_paused = 27,
-  is_conty_connected = 28
+  isRobotRunning = 0,
+  isRobotReady = 1,
+  is_emergencyStop = 2,
+  isCollided = 3,
+  is_errorState = 4,
+  isBusy = 5,
+  isMoveFinished = 6,
+  isHome = 7,
+  isZero = 8,
+  isInResetting = 9,
+  isDirectTeachingMode = 24,
+  isTeachingMode = 25,
+  isProgramRunning = 26,
+  isProgramPaused = 27,
+  isContyConnected = 28
 }
 
 export class RobotStatus {
@@ -30,19 +30,19 @@ export class RobotStatus {
     return robotStatus
   }
 
-  public is_robot_running: boolean
-  public is_robot_ready: boolean
-  public is_emergency_stop: boolean
-  public is_collided: boolean
-  public is_error_state: boolean
-  public is_busy: boolean
-  public is_move_finished: boolean
-  public is_home: boolean
-  public is_zero: boolean
-  public is_in_resetting: boolean
-  public is_direct_teaching_mode: boolean
-  public is_teaching_mode: boolean
-  public is_program_running: boolean
-  public is_program_paused: boolean
-  public is_conty_connected: boolean
+  public isRobotRunning: boolean
+  public isRobotReady: boolean
+  public is_emergencyStop: boolean
+  public isCollided: boolean
+  public is_errorState: boolean
+  public isBusy: boolean
+  public isMoveFinished: boolean
+  public isHome: boolean
+  public isZero: boolean
+  public isInResetting: boolean
+  public isDirectTeachingMode: boolean
+  public isTeachingMode: boolean
+  public isProgramRunning: boolean
+  public isProgramPaused: boolean
+  public isContyConnected: boolean
 }

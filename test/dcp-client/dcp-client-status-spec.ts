@@ -19,13 +19,13 @@ describe('IndyDCPClient', function () {
       var client = new IndyDCPClient(ROBOT_IP, ROBOT_NAME)
       await client.connect()
 
-      await client.emergency_stop()
-      await waitForState(client, status => !status.is_robot_ready)
+      await client.emergencyStop()
+      await waitForState(client, status => !status.isRobotReady)
 
-      await client.reset_robot()
+      await client.resetRobot()
 
-      await waitForState(client, status => status.is_in_resetting)
-      await waitForState(client, status => status.is_robot_ready)
+      await waitForState(client, status => status.isInResetting)
+      await waitForState(client, status => status.isRobotReady)
 
       console.log(client.robotStatus)
 

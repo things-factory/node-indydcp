@@ -30,7 +30,7 @@ describe('Decorator', function () {
       decorated_float(x) {}
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'double')
-      decorated_double(x) {}
+      decoratedDouble(x) {}
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'string')
       decorated_string(x) {}
@@ -45,7 +45,7 @@ describe('Decorator', function () {
       decorated_floats(x) {}
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'doubles')
-      decorated_doubles(x) {}
+      decoratedDoubles(x) {}
     }
 
     it('should have same charater value in request data', async function () {
@@ -87,7 +87,7 @@ describe('Decorator', function () {
     it('should have same double value in request data', async function () {
       var decorated = new Clazz()
 
-      await decorated.decorated_double(0.00001234)
+      await decorated.decoratedDouble(0.00001234)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readDoubleLE(0)).to.equal(0.00001234)
@@ -132,7 +132,7 @@ describe('Decorator', function () {
     it('should have same doubles value in request data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_doubles([0.00001234])
+      var value = await decorated.decoratedDoubles([0.00001234])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(decorated.reqData.readDoubleLE(0)).to.equal(0.00001234)
@@ -166,7 +166,7 @@ describe('Decorator', function () {
       decorated_float(x): any {}
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'double', 'double')
-      decorated_double(x): any {}
+      decoratedDouble(x): any {}
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'string', 'string')
       decorated_string(xs): any {}
@@ -181,7 +181,7 @@ describe('Decorator', function () {
       decorated_floats(xs): any {}
 
       @packet(CommandCode.CMD_START_CURRENT_PROGRAM, 'doubles', 'doubles')
-      decorated_doubles(xs): any {}
+      decoratedDoubles(xs): any {}
     }
 
     it('should have same charater value in data', async function () {
@@ -223,7 +223,7 @@ describe('Decorator', function () {
     it('should have same double value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_double(0.00001234)
+      var value = await decorated.decoratedDouble(0.00001234)
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(value).to.equal(0.00001234)
@@ -268,7 +268,7 @@ describe('Decorator', function () {
     it('should have same doubles value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_doubles([0.00001234, 0.00001235])
+      var value = await decorated.decoratedDoubles([0.00001234, 0.00001235])
 
       expect(decorated.command).to.equal(CommandCode.CMD_START_CURRENT_PROGRAM)
       expect(value[0]).to.equal(0.00001234)
@@ -350,7 +350,7 @@ describe('Decorator', function () {
       decorated_float(): any {}
 
       @packet(5, null, 'double')
-      decorated_double(): any {}
+      decoratedDouble(): any {}
 
       @packet(11, null, 'string')
       decorated_string(): any {}
@@ -365,7 +365,7 @@ describe('Decorator', function () {
       decorated_floats(): any {}
 
       @packet(15, null, 'doubles')
-      decorated_doubles(): any {}
+      decoratedDoubles(): any {}
     }
 
     it('should have same charater value in data', async function () {
@@ -403,7 +403,7 @@ describe('Decorator', function () {
     it('should have same double value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_double()
+      var value = await decorated.decoratedDouble()
 
       expect(value).to.equal(0.0001234)
     })
@@ -443,7 +443,7 @@ describe('Decorator', function () {
     it('should have same doubles value in data', async function () {
       var decorated = new Clazz()
 
-      var value = await decorated.decorated_doubles()
+      var value = await decorated.decoratedDoubles()
 
       expect(value[0]).to.equal(0.0001234)
     })

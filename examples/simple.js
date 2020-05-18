@@ -12,15 +12,15 @@ async function waitForState(client, checkFn) {
   var client = new IndyDCPClient('192.168.1.207', 'NRMK-Indy7')
   await client.connect()
 
-  await client.go_home()
+  await client.goHome()
   console.log(await client.getRobotStatus())
 
-  await waitForState(client, status => !status.is_busy)
+  await waitForState(client, status => !status.isBusy)
 
-  await client.go_zero()
+  await client.goZero()
   console.log(await client.getRobotStatus())
 
-  await waitForState(client, status => !status.is_busy)
+  await waitForState(client, status => !status.isBusy)
 
   client.disconnect()
 })()

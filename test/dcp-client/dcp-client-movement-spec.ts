@@ -12,22 +12,22 @@ async function waitForState(client, checkFn) {
 }
 
 describe('IndyDCPClient', function () {
-  describe('#go_home()', function () {
+  describe('#goHome()', function () {
     this.timeout(10000)
 
     it('should return binary string', async () => {
       var client = new IndyDCPClient(ROBOT_IP, ROBOT_NAME)
       await client.connect()
 
-      await client.go_home()
+      await client.goHome()
       console.log(await client.getRobotStatus())
 
-      await waitForState(client, status => !status.is_busy)
+      await waitForState(client, status => !status.isBusy)
 
-      await client.go_zero()
+      await client.goZero()
       console.log(await client.getRobotStatus())
 
-      await waitForState(client, status => !status.is_busy)
+      await waitForState(client, status => !status.isBusy)
 
       client.disconnect()
     })

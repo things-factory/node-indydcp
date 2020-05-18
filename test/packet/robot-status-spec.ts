@@ -6,41 +6,41 @@ describe('Packet', function () {
     it('should return true when the flags are all set', async function () {
       var robotStatus = RobotStatus.from(0b11111111111111111111111111111111111)
 
-      expect(robotStatus.is_robot_running).to.be.true
-      expect(robotStatus.is_robot_ready).to.be.true
-      expect(robotStatus.is_emergency_stop).to.be.true
-      expect(robotStatus.is_collided).to.be.true
-      expect(robotStatus.is_error_state).to.be.true
-      expect(robotStatus.is_busy).to.be.true
-      expect(robotStatus.is_move_finished).to.be.true
-      expect(robotStatus.is_home).to.be.true
-      expect(robotStatus.is_zero).to.be.true
-      expect(robotStatus.is_in_resetting).to.be.true
-      expect(robotStatus.is_direct_teaching_mode).to.be.true
-      expect(robotStatus.is_teaching_mode).to.be.true
-      expect(robotStatus.is_program_running).to.be.true
-      expect(robotStatus.is_program_paused).to.be.true
-      expect(robotStatus.is_conty_connected).to.be.true
+      expect(robotStatus.isRobotRunning).to.be.true
+      expect(robotStatus.isRobotReady).to.be.true
+      expect(robotStatus.is_emergencyStop).to.be.true
+      expect(robotStatus.isCollided).to.be.true
+      expect(robotStatus.is_errorState).to.be.true
+      expect(robotStatus.isBusy).to.be.true
+      expect(robotStatus.isMoveFinished).to.be.true
+      expect(robotStatus.isHome).to.be.true
+      expect(robotStatus.isZero).to.be.true
+      expect(robotStatus.isInResetting).to.be.true
+      expect(robotStatus.isDirectTeachingMode).to.be.true
+      expect(robotStatus.isTeachingMode).to.be.true
+      expect(robotStatus.isProgramRunning).to.be.true
+      expect(robotStatus.isProgramPaused).to.be.true
+      expect(robotStatus.isContyConnected).to.be.true
     })
 
     it('should return false when the flags are all unset', async function () {
       var robotStatus = RobotStatus.from(0b0000000000000000000000000000000000)
 
-      expect(robotStatus.is_robot_running).to.be.false
-      expect(robotStatus.is_robot_ready).to.be.false
-      expect(robotStatus.is_emergency_stop).to.be.false
-      expect(robotStatus.is_collided).to.be.false
-      expect(robotStatus.is_error_state).to.be.false
-      expect(robotStatus.is_busy).to.be.false
-      expect(robotStatus.is_move_finished).to.be.false
-      expect(robotStatus.is_home).to.be.false
-      expect(robotStatus.is_zero).to.be.false
-      expect(robotStatus.is_in_resetting).to.be.false
-      expect(robotStatus.is_direct_teaching_mode).to.be.false
-      expect(robotStatus.is_teaching_mode).to.be.false
-      expect(robotStatus.is_program_running).to.be.false
-      expect(robotStatus.is_program_paused).to.be.false
-      expect(robotStatus.is_conty_connected).to.be.false
+      expect(robotStatus.isRobotRunning).to.be.false
+      expect(robotStatus.isRobotReady).to.be.false
+      expect(robotStatus.is_emergencyStop).to.be.false
+      expect(robotStatus.isCollided).to.be.false
+      expect(robotStatus.is_errorState).to.be.false
+      expect(robotStatus.isBusy).to.be.false
+      expect(robotStatus.isMoveFinished).to.be.false
+      expect(robotStatus.isHome).to.be.false
+      expect(robotStatus.isZero).to.be.false
+      expect(robotStatus.isInResetting).to.be.false
+      expect(robotStatus.isDirectTeachingMode).to.be.false
+      expect(robotStatus.isTeachingMode).to.be.false
+      expect(robotStatus.isProgramRunning).to.be.false
+      expect(robotStatus.isProgramPaused).to.be.false
+      expect(robotStatus.isContyConnected).to.be.false
     })
   })
 })
