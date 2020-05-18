@@ -503,10 +503,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   getEndtoolDO(type /* EndToolType */) {}
 
   // FT sensor implementation
-  @packet(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_RAW, null, 'int')
+  @packet(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_RAW, null, 'ints')
   getRobotFtSensorRaw() {}
 
-  @packet(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_TRANS, null, 'double')
+  @packet(CommandCode.CMD_GET_EXTIO_FTCAN_ROBOT_TRANS, null, 'doubles')
   getRobotFtSensorProcess() {}
 
   @packet(CommandCode.CMD_GET_EXTIO_FTCAN_CB_RAW, null, 'int')
