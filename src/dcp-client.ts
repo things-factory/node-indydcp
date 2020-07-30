@@ -446,6 +446,12 @@ export class IndyDCPClient implements IIndyDCPClient {
   @packet(CommandCode.CMD_GET_TORQUE, null, 'doubles')
   getTorque() {}
 
+  @packet(CommandCode.CMD_GET_INV_KIN, ['doubles', 'doubles'], 'doubles')
+  getInvKin(task_pos, init_q) {}
+
+  @packet(CommandCode.CMD_SET_SYNC_MODE, 'bool')
+  setSyncMode(mode) {}
+
   @packet(CommandCode.CMD_GET_LAST_EMG_INFO)
   getLastEmergencyInfo() {
     // Check (TODO: represent meaning of results)
