@@ -102,6 +102,10 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   @mutex
   async handleCommand(command, reqBuffer?, reqBufferSize?): Promise<{ errorCode; resData; resDataSize }> {
+    if (!this.socket) {
+      throw new Error('socket closed normally')
+    }
+
     var { header: reqHeader, buffer } = buildReqPacket(this, command, reqBuffer, reqBufferSize)
     await this._sendMessage(buffer)
 
@@ -130,6 +134,10 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   @mutex
   async handleExtendedCommand(extCommand, reqExtData?, reqExtDataSize?): Promise<{ errorCode; resData; resDataSize }> {
+    if (!this.socket) {
+      throw new Error('socket closed normally')
+    }
+
     var { header: reqHeader, buffer } = buildExtReqPacket(extCommand, reqExtData, reqExtDataSize)
     await this._sendMessage(buffer)
 
