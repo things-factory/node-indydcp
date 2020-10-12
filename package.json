@@ -1,6 +1,6 @@
 {
   "name": "@things-factory/node-indydcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "build/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "await-lock": "^2.0.1",
+    "await-lock": "^2.1.0",
     "promise-socket": "^7.0.0",
     "struct": "^0.0.12"
   },
