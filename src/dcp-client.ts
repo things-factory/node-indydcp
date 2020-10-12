@@ -55,13 +55,11 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   async connect() {
-    var socket = new PromiseSocket(new Socket())
+    this.socket = new PromiseSocket(new Socket())
+    // this.socket.setEncoding('utf8')
 
-    // socket.setEncoding('utf8')
-    socket.setTimeout(5000)
-    await socket.connect(this._serverPort, this.serverIp)
+    await this.socket.connect(this._serverPort, this.serverIp)
 
-    this.socket = socket
     console.log(`Connect: Server IP (${this.serverIp})`)
   }
 
