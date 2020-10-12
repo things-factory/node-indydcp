@@ -34,7 +34,6 @@ export interface IIndyDCPClient {
   JOINT_DOF
   lock
   socket
-  timeout
   invokeId
   serverIp
   robotName
@@ -46,7 +45,6 @@ export interface IIndyDCPClient {
   connect()
   disconnect()
   shutdown()
-  setTimeoutSec(timeout)
   getRobotStatus()
   handleCommand(command, reqData, reqDataSize): Promise<{ errorCode; resData; resDataSize }>
   handleExtendedCommand(extCommand, reqExtData, reqExtDataSize): Promise<{ errorCode; resData; resDataSize }>

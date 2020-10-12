@@ -23,7 +23,6 @@ export class IndyDCPClient implements IIndyDCPClient {
   public JOINT_DOF
   public lock
   public socket
-  public timeout
   public invokeId
   public serverIp
   public robotName
@@ -45,7 +44,6 @@ export class IndyDCPClient implements IIndyDCPClient {
 
     this.lock = this._lock
     this.socket
-    this.timeout = 10
     this.invokeId = 0
     this.serverIp = serverIp
     this.robotName = robotName
@@ -71,14 +69,6 @@ export class IndyDCPClient implements IIndyDCPClient {
 
   shutdown() {
     this.disconnect()
-  }
-
-  setTimeoutSec(timeout) {
-    if (timeout < 0) {
-      console.log(`Invalid time out setting: ${timeout} < 0`)
-    }
-
-    this.timeout = timeout
   }
 
   async _sendMessage(buf, size?) {
