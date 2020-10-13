@@ -53,8 +53,10 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   async connect() {
-    this.socket = new PromiseSocket(new Socket())
-    // this.socket.setEncoding('utf8')
+    const socket = new Socket()
+    socket.setKeepAlive(true, 60000)
+
+    this.socket = new PromiseSocket(socket)
 
     await this.socket.connect(this._serverPort, this.serverIp)
 
