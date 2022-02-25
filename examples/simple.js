@@ -9,18 +9,21 @@ async function waitForState(client, checkFn) {
 }
 
 ;(async function () {
-  var client = new IndyDCPClient('192.168.1.207', 'NRMK-Indy7')
+  var client = new IndyDCPClient('192.168.0.111', 'NRMK-Indy7')
   await client.connect()
 
-  await client.goHome()
-  console.log(await client.getRobotStatus())
+  console.log(await client.getSmartDIs())
+  console.log(await client.getSmartDI(0))
 
-  await waitForState(client, status => !status.isBusy)
+  // await client.goHome()
+  // console.log(await client.getRobotStatus())
 
-  await client.goZero()
-  console.log(await client.getRobotStatus())
+  // await waitForState(client, status => !status.isBusy)
 
-  await waitForState(client, status => !status.isBusy)
+  // await client.goZero()
+  // console.log(await client.getRobotStatus())
+
+  // await waitForState(client, status => !status.isBusy)
 
   client.disconnect()
 })()

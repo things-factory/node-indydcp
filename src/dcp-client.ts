@@ -1,22 +1,21 @@
+import AwaitLock from 'await-lock'
 import { Socket } from 'net'
 import PromiseSocket from 'promise-socket'
-import AwaitLock from 'await-lock'
 
-import { ROBOT_INDYRP2, DirectVariableType, IIndyDCPClient } from './const'
 import { CommandCode } from './command-code'
-import { RobotStatus } from './robot-status'
-
+import { DirectVariableType, IIndyDCPClient, ROBOT_INDYRP2 } from './const'
+import { extpacket, mutex, packet } from './decorators'
 import {
-  SIZE_HEADER_COMMAND,
-  SIZE_DATA_TCP_MAX,
-  TOOMUCH,
-  parsePacketHeader,
-  parseExtHeader,
-  buildReqPacket,
   buildExtReqPacket,
-  checkHeader
+  buildReqPacket,
+  checkHeader,
+  parseExtHeader,
+  parsePacketHeader,
+  SIZE_DATA_TCP_MAX,
+  SIZE_HEADER_COMMAND,
+  TOOMUCH
 } from './packet'
-import { mutex, packet, extpacket } from './decorators'
+import { RobotStatus } from './robot-status'
 
 /* Indy Client Class */
 export class IndyDCPClient implements IIndyDCPClient {
@@ -475,7 +474,7 @@ export class IndyDCPClient implements IIndyDCPClient {
   }
 
   // I/O
-  @packet(CommandCode.CMD_GET_SMART_DI, 'int', 'char')
+  @packet(CommandCode.CMD_GET_SMART_DI, 'int', 'bool')
   getSmartDI(idx) {}
 
   @packet(CommandCode.CMD_GET_SMART_DIS, null, 'bools')
